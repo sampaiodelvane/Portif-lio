@@ -70,10 +70,10 @@ create policy "admin apaga mensagem"
   using ((select public.is_admin()));
 
 -- ---------------------------------------------------------------------------
--- Projetos em destaque (nome do repositório no GitHub + ordem)
+-- Projetos em destaque (slug do catálogo src/content/projects.ts + ordem)
 -- ---------------------------------------------------------------------------
 create table if not exists public.featured_projects (
-  repo_name text primary key check (char_length(repo_name) between 1 and 100),
+  project_slug text primary key check (project_slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and char_length(project_slug) <= 100),
   position smallint not null check (position >= 0),
   created_at timestamptz not null default now()
 );
@@ -87,7 +87,7 @@ create policy "todos leem destaques"
 
 -- Escrita só pela função abaixo (atômica). Nenhuma política de insert/update/delete direta.
 
-create or replace function public.set_featured_projects(repo_names text[])
+create or replace function public.set_featured_projects(slugs text[])
 returns void
 language plpgsql
 security definer
@@ -98,15 +98,15 @@ begin
     raise exception 'permissão negada' using errcode = '42501';
   end if;
 
-  if coalesce(array_length(repo_names, 1), 0) > 6 then
+  if coalesce(array_length(slugs, 1), 0) > 6 then
     raise exception 'no máximo 6 destaques';
   end if;
 
   delete from public.featured_projects where true;
 
-  insert into public.featured_projects (repo_name, position)
+  insert into public.featured_projects (project_slug, position)
   select name, (ordinality - 1)::smallint
-  from unnest(repo_names) with ordinality as t(name, ordinality);
+  from unnest(slugs) with ordinality as t(name, ordinality);
 end;
 $$;
 

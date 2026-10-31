@@ -21,11 +21,11 @@ describe('árvore de rotas', () => {
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
   })
 
-  it('resolve a URL canônica /projetos/:repoName', async () => {
-    renderRoute(projectPath('meu-repo'))
+  it('resolve a URL canônica /projetos/:slug', async () => {
+    renderRoute(projectPath('novo-tv-time'))
 
     expect(await screen.findByRole('link', { name: 'Todos os projetos' })).toBeInTheDocument()
-    expect(document.title).toBe('meu-repo · Portfólio')
+    expect(document.title).toBe('Novo TV Time · Portfólio')
   })
 
   it('mostra a página 404 para rota desconhecida, mantendo o layout', async () => {

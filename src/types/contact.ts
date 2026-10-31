@@ -13,6 +13,7 @@ export interface ContactMessage extends ContactInput {
 }
 
 export interface FeaturedProject {
-  repoName: string
+  /** Slug do projeto no catálogo (src/content/projects.ts). */
+  slug: string
   position: number
 }

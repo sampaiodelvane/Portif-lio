@@ -59,7 +59,7 @@ export function useDeleteMessage() {
 export function useSaveFeatured() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (repoNames: string[]) => (await loadAdminBackend()).setFeatured(repoNames),
+    mutationFn: async (slugs: string[]) => (await loadAdminBackend()).setFeatured(slugs),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: featuredKey }),
   })
 }

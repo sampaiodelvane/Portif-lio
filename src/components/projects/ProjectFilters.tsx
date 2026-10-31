@@ -2,18 +2,18 @@ import { Search } from 'lucide-react'
 
 interface ProjectFiltersProps {
   query: string
-  language: string
-  languages: string[]
+  tech: string
+  technologies: string[]
   onQueryChange: (value: string) => void
-  onLanguageChange: (value: string) => void
+  onTechChange: (value: string) => void
 }
 
 export function ProjectFilters({
   query,
-  language,
-  languages,
+  tech,
+  technologies,
   onQueryChange,
-  onLanguageChange,
+  onTechChange,
 }: ProjectFiltersProps) {
   return (
     <search className="flex flex-col gap-3 sm:flex-row">
@@ -27,21 +27,21 @@ export function ProjectFilters({
           type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Buscar por nome, descrição ou tópico"
+          placeholder="Buscar por nome, descrição ou funcionalidade"
           className="w-full rounded-md border border-line bg-surface py-2.5 pr-3 pl-9 text-sm placeholder:text-muted"
         />
       </label>
       <label className="sm:w-56">
-        <span className="sr-only">Filtrar por linguagem</span>
+        <span className="sr-only">Filtrar por tecnologia</span>
         <select
-          value={language}
-          onChange={(event) => onLanguageChange(event.target.value)}
+          value={tech}
+          onChange={(event) => onTechChange(event.target.value)}
           className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm"
         >
-          <option value="">Todas as linguagens</option>
-          {languages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang}
+          <option value="">Todas as tecnologias</option>
+          {technologies.map((item) => (
+            <option key={item} value={item}>
+              {item}
             </option>
           ))}
         </select>

@@ -91,9 +91,9 @@ export function createSupabaseAdminBackend({ url, anonKey }: SupabaseConfig): Ad
       fail(error)
     },
 
-    async setFeatured(repoNames) {
+    async setFeatured(slugs) {
       // Função SQL: troca a lista numa única transação (ver supabase/migrations).
-      const { error } = await supabase.rpc('set_featured_projects', { repo_names: repoNames })
+      const { error } = await supabase.rpc('set_featured_projects', { slugs })
       fail(error)
     },
   }

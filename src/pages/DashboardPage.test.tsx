@@ -1,8 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { DEMO_KEYS, readStored, seedDemoSession, seedMessages } from '@/test/demo-backend'
-import { jsonResponse, makeRepoDto, mockFetch } from '@/test/github-fixtures'
 import { renderRoute } from '@/test/render-route'
 import type { ContactMessage, FeaturedProject } from '@/types/contact'
 
@@ -46,28 +45,21 @@ describe('DashboardPage — mensagens', () => {
 describe('DashboardPage — destaques', () => {
   it('limita a 3 escolhas, salva na ordem e a home passa a exibi-las', async () => {
     seedDemoSession()
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
-    mockFetch([
-      {
-        match: /\/users\/octocat\/repos/,
-        respond: () =>
-          jsonResponse(['alfa', 'beta', 'gama', 'delta'].map((name) => makeRepoDto({ name }))),
-      },
-    ])
     const user = userEvent.setup()
     const { router } = renderRoute('/admin')
 
-    await user.click(await screen.findByRole('checkbox', { name: /gama/ }))
-    await user.click(screen.getByRole('checkbox', { name: /alfa/ }))
-    await user.click(screen.getByRole('checkbox', { name: /delta/ }))
-    expect(screen.getByRole('checkbox', { name: /beta/ })).toBeDisabled()
+    // Opções vêm do catálogo (com os nomes de exibição), inclusive projetos privados.
+    await user.click(await screen.findByRole('checkbox', { name: /TerraVis/ }))
+    await user.click(screen.getByRole('checkbox', { name: /G&B Higienizações/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Página de Vinhos/ }))
+    expect(screen.getByRole('checkbox', { name: /Novo TV Time/ })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Salvar destaques' }))
     expect(await screen.findByText('Destaques salvos')).toBeInTheDocument()
     expect(readStored<FeaturedProject[]>(DEMO_KEYS.featured)).toEqual([
-      { repoName: 'gama', position: 0 },
-      { repoName: 'alfa', position: 1 },
-      { repoName: 'delta', position: 2 },
+      { slug: 'terravis', position: 0 },
+      { slug: 'gb-higienizacoes', position: 1 },
+      { slug: 'pagina-de-vinhos', position: 2 },
     ])
 
     await router.navigate('/')
@@ -76,6 +68,16 @@ describe('DashboardPage — destaques', () => {
     const names = within(showcase)
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent)
-    expect(names).toEqual(['gama', 'alfa', 'delta'])
+    expect(names).toEqual(['TerraVis', 'G&B Higienizações', 'Página de Vinhos'])
+  })
+
+  it('sem destaques salvos, a home mostra os três primeiros do catálogo', async () => {
+    renderRoute('/')
+
+    const showcase = await screen.findByRole('region', { name: 'Projetos em destaque' })
+    const names = (await within(showcase).findAllByRole('heading', { level: 3 })).map(
+      (h) => h.textContent,
+    )
+    expect(names).toEqual(['G&B Higienizações', 'Página de Vinhos', 'Novo TV Time'])
   })
 })

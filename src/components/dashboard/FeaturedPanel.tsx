@@ -1,28 +1,25 @@
 import { CircleCheck, LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
-import { GithubErrorMessage } from '@/components/projects/GithubErrorMessage'
-import { MissingUsernameMessage } from '@/components/projects/MissingUsernameMessage'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { PORTFOLIO_PROJECTS } from '@/content/projects'
 import { useSaveFeatured } from '@/hooks/useAdmin'
 import { useFeaturedProjects } from '@/hooks/useFeaturedProjects'
-import { useGithubRepos } from '@/hooks/useGithubRepos'
 
 export const MAX_FEATURED = 3
 
+// Opções vêm do catálogo curado (inclui privados), não da API do GitHub.
+const OPTIONS = PORTFOLIO_PROJECTS.map(({ slug, title }) => ({ slug, title }))
+
 export function FeaturedPanel() {
-  const repos = useGithubRepos()
   const featured = useFeaturedProjects()
   // A mutação fica aqui (e não no editor) porque o editor é remontado após salvar:
   // o feedback "Destaques salvos" precisa sobreviver a essa remontagem.
   const save = useSaveFeatured()
 
-  if (repos.username === null) return <MissingUsernameMessage />
-  if (repos.isError)
-    return <GithubErrorMessage error={repos.error} onRetry={() => repos.refetch()} />
-  if (repos.isPending || featured.isPending) {
+  if (featured.isPending) {
     return (
       <div aria-busy="true" className="flex flex-col gap-2">
-        <span className="sr-only">Carregando repositórios…</span>
+        <span className="sr-only">Carregando destaques…</span>
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
@@ -34,7 +31,6 @@ export function FeaturedPanel() {
   return (
     <FeaturedEditor
       key={(featured.data ?? []).join('|')}
-      repoNames={repos.data.map((r) => r.name)}
       initial={featured.data ?? []}
       save={save}
     />
@@ -42,14 +38,15 @@ export function FeaturedPanel() {
 }
 
 interface FeaturedEditorProps {
-  repoNames: string[]
   initial: string[]
   save: ReturnType<typeof useSaveFeatured>
 }
 
-function FeaturedEditor({ repoNames, initial, save }: FeaturedEditorProps) {
-  // Destaques salvos que não existem mais no GitHub são descartados.
-  const [selected, setSelected] = useState(() => initial.filter((n) => repoNames.includes(n)))
+function FeaturedEditor({ initial, save }: FeaturedEditorProps) {
+  // Destaques salvos que saíram do catálogo são descartados.
+  const [selected, setSelected] = useState(() =>
+    initial.filter((slug) => OPTIONS.some((option) => option.slug === slug)),
+  )
   const isFull = selected.length >= MAX_FEATURED
   const isDirty = selected.join('|') !== initial.join('|')
 
@@ -64,16 +61,16 @@ function FeaturedEditor({ repoNames, initial, save }: FeaturedEditorProps) {
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted">
         Escolha até {MAX_FEATURED} projetos para a home. A ordem de seleção define a ordem de
-        exibição. Sem destaques, a home mostra os mais recentes.
+        exibição. Sem destaques, a home mostra os três primeiros do catálogo.
       </p>
       <fieldset>
         <legend className="sr-only">Projetos em destaque</legend>
         <ul className="flex flex-col divide-y divide-line rounded-lg border border-line">
-          {repoNames.map((name) => {
-            const position = selected.indexOf(name)
+          {OPTIONS.map(({ slug, title }) => {
+            const position = selected.indexOf(slug)
             const checked = position !== -1
             return (
-              <li key={name}>
+              <li key={slug}>
                 <label
                   className={`flex items-center gap-3 px-4 py-3 ${
                     !checked && isFull
@@ -85,10 +82,10 @@ function FeaturedEditor({ repoNames, initial, save }: FeaturedEditorProps) {
                     type="checkbox"
                     checked={checked}
                     disabled={!checked && isFull}
-                    onChange={() => toggle(name)}
+                    onChange={() => toggle(slug)}
                     className="size-4 accent-[var(--color-accent)]"
                   />
-                  <span className="flex-1 break-all">{name}</span>
+                  <span className="flex-1">{title}</span>
                   {checked && (
                     <span className="font-mono text-xs text-accent">#{position + 1}</span>
                   )}

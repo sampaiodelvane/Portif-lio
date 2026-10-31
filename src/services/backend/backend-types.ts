@@ -20,5 +20,5 @@ export interface AdminBackend {
   setMessageRead: (id: string, read: boolean) => Promise<void>
   deleteMessage: (id: string) => Promise<void>
   /** Substitui a lista inteira (ordem do array = posição). */
-  setFeatured: (repoNames: string[]) => Promise<void>
+  setFeatured: (slugs: string[]) => Promise<void>
 }

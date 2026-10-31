@@ -2,15 +2,15 @@
 export const ROUTE_PATHS = {
   home: '/',
   projects: '/projetos',
-  projectDetail: '/projetos/:repoName',
+  projectDetail: '/projetos/:slug',
   contact: '/contato',
   login: '/login',
   admin: '/admin',
 } as const
 
-/** URL canônica de um projeto: /projetos/:repoName */
-export function projectPath(repoName: string): string {
-  return `${ROUTE_PATHS.projects}/${encodeURIComponent(repoName)}`
+/** URL canônica de um projeto: /projetos/:slug (slug do catálogo, não o nome do repositório) */
+export function projectPath(slug: string): string {
+  return `${ROUTE_PATHS.projects}/${encodeURIComponent(slug)}`
 }
 
 /** Só aceita redirecionar para caminhos internos (evita open redirect via state/URL). */

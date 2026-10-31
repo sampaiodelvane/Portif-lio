@@ -1,20 +1,25 @@
 import { type CardHeadingLevel, ProjectCard } from '@/components/projects/ProjectCard'
 import { ProjectCardSkeleton } from '@/components/projects/ProjectCardSkeleton'
-import type { GithubRepo } from '@/types/github'
+import type { ShowcaseProject } from '@/types/portfolio'
 
 const GRID = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
 
 interface ProjectGridProps {
-  repos: GithubRepo[]
+  projects: ShowcaseProject[]
   headingLevel?: CardHeadingLevel
+  githubLoading?: boolean
 }
 
-export function ProjectGrid({ repos, headingLevel }: ProjectGridProps) {
+export function ProjectGrid({ projects, headingLevel, githubLoading }: ProjectGridProps) {
   return (
     <ul className={GRID}>
-      {repos.map((repo) => (
-        <li key={repo.id}>
-          <ProjectCard repo={repo} headingLevel={headingLevel} />
+      {projects.map((project) => (
+        <li key={project.slug}>
+          <ProjectCard
+            project={project}
+            headingLevel={headingLevel}
+            githubLoading={githubLoading}
+          />
         </li>
       ))}
     </ul>

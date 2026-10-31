@@ -132,12 +132,12 @@ export const localAdminBackend: AdminBackend = {
     )
   },
 
-  async setFeatured(repoNames) {
+  async setFeatured(slugs) {
     requireSession()
     await delay()
     write(
       KEYS.featured,
-      repoNames.map((repoName, position) => ({ repoName, position })),
+      slugs.map((slug, position) => ({ slug, position })),
     )
   },
 }

@@ -1,42 +1,23 @@
-import { ArrowLeft, ArrowUpRight, FileQuestion } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Check, FileQuestion, Lock } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
-import { GithubErrorMessage } from '@/components/projects/GithubErrorMessage'
 import { LanguageBreakdown } from '@/components/projects/LanguageBreakdown'
-import { MissingUsernameMessage } from '@/components/projects/MissingUsernameMessage'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { StatusMessage } from '@/components/ui/StatusMessage'
-import { useGithubRepo } from '@/hooks/useGithubRepo'
+import { usePortfolioProjects } from '@/hooks/usePortfolioProjects'
 import { formatCompactNumber, formatDate } from '@/lib/format'
-import { GithubApiError } from '@/lib/github-api-error'
-import { toSafeExternalUrl } from '@/lib/repo-filters'
+import { githubUrlFor, toSafeExternalUrl } from '@/lib/showcase'
 import { ROUTE_PATHS } from '@/routes/route-paths'
-import type { GithubRepo } from '@/types/github'
+import type { ShowcaseProject } from '@/types/portfolio'
 
 export default function ProjectDetailPage() {
-  const { repoName = '' } = useParams()
-  const { data: repo, isPending, isError, error, refetch, username } = useGithubRepo(repoName)
-
-  function renderContent() {
-    if (username === null) return <MissingUsernameMessage />
-    if (isPending) return <DetailSkeleton />
-    if (isError) {
-      if (error instanceof GithubApiError && error.kind === 'not-found') {
-        return (
-          <StatusMessage icon={FileQuestion} title="Projeto não encontrado">
-            Não existe repositório público chamado “{repoName}”. Ele pode ter sido renomeado ou
-            tornado privado.
-          </StatusMessage>
-        )
-      }
-      return <GithubErrorMessage error={error} onRetry={() => refetch()} />
-    }
-    return <RepoDetails repo={repo} />
-  }
+  const { slug = '' } = useParams()
+  const { projects, username, isGithubLoading } = usePortfolioProjects()
+  const project = projects.find((p) => p.slug === slug.toLowerCase())
 
   return (
     <>
-      <title>{`${repo?.name ?? repoName} · Portfólio`}</title>
+      <title>{`${project?.title ?? 'Projeto não encontrado'} · Portfólio`}</title>
       <Link
         to={ROUTE_PATHS.projects}
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted hover:text-ink"
@@ -44,49 +25,69 @@ export default function ProjectDetailPage() {
         <ArrowLeft aria-hidden="true" className="size-4" />
         Todos os projetos
       </Link>
-      {renderContent()}
+      {project ? (
+        <ProjectDetails
+          project={project}
+          githubUrl={githubUrlFor(project, username)}
+          githubLoading={isGithubLoading}
+        />
+      ) : (
+        <StatusMessage icon={FileQuestion} title="Projeto não encontrado">
+          Não há projeto com o endereço “{slug}” no portfólio. Ele pode ter sido renomeado.
+        </StatusMessage>
+      )}
     </>
   )
 }
 
-function RepoDetails({ repo }: { repo: GithubRepo }) {
-  const demoUrl = toSafeExternalUrl(repo.homepage)
+interface ProjectDetailsProps {
+  project: ShowcaseProject
+  githubUrl: string | null
+  githubLoading: boolean
+}
+
+function ProjectDetails({ project, githubUrl, githubLoading }: ProjectDetailsProps) {
+  const liveUrl = toSafeExternalUrl(project.liveUrl ?? project.github?.homepage)
+  const isPublic = project.visibility === 'public'
 
   return (
     <article className="grid gap-12 lg:grid-cols-[1fr_18rem]">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-4">
-          {repo.language && (
-            <p className="font-mono text-sm uppercase tracking-widest text-muted">
-              {repo.language}
-            </p>
-          )}
-          <h1 className="break-words font-serif text-4xl leading-tight sm:text-5xl">{repo.name}</h1>
-          <p className="max-w-prose text-lg text-muted">{repo.description ?? 'Sem descrição.'}</p>
+          <p className="font-mono text-sm uppercase tracking-widest text-muted">
+            {project.context}
+          </p>
+          <h1 className="break-words font-serif text-4xl leading-tight sm:text-5xl">
+            {project.title}
+          </h1>
+          <p className="max-w-prose text-lg text-muted">{project.description}</p>
         </header>
 
-        <div className="flex flex-wrap gap-3">
-          <ExternalButton href={repo.url} primary>
-            Ver no GitHub
-          </ExternalButton>
-          {demoUrl && <ExternalButton href={demoUrl}>Ver demo</ExternalButton>}
-        </div>
+        {(liveUrl || githubUrl) && (
+          <div className="flex flex-wrap gap-3">
+            {liveUrl && (
+              <ExternalButton href={liveUrl} primary>
+                Ver online
+              </ExternalButton>
+            )}
+            {githubUrl && (
+              <ExternalButton href={githubUrl} primary={!liveUrl}>
+                Ver código no GitHub
+              </ExternalButton>
+            )}
+          </div>
+        )}
 
-        {repo.topics.length > 0 && (
-          <section aria-labelledby="topicos">
-            <h2
-              id="topicos"
-              className="mb-3 font-mono text-xs uppercase tracking-widest text-muted"
-            >
-              Tópicos
+        {project.features.length > 0 && (
+          <section aria-labelledby="funcionalidades" className="flex flex-col gap-4">
+            <h2 id="funcionalidades" className="font-serif text-2xl">
+              Funcionalidades
             </h2>
-            <ul className="flex flex-wrap gap-2">
-              {repo.topics.map((topic) => (
-                <li
-                  key={topic}
-                  className="rounded-sm border border-line px-2 py-1 font-mono text-xs text-muted"
-                >
-                  {topic}
+            <ul className="flex flex-col gap-3">
+              {project.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-3">
+                  <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-accent" />
+                  <span>{feature}</span>
                 </li>
               ))}
             </ul>
@@ -95,23 +96,59 @@ function RepoDetails({ repo }: { repo: GithubRepo }) {
       </div>
 
       <aside className="flex flex-col gap-8 lg:border-l lg:border-line lg:pl-8">
-        <dl className="grid grid-cols-2 gap-4 font-mono text-sm">
-          <Stat label="Estrelas" value={formatCompactNumber(repo.stars)} />
-          <Stat label="Forks" value={formatCompactNumber(repo.forks)} />
-          <Stat label="Criado em" value={formatDate(repo.createdAt)} />
-          <Stat label="Último push" value={formatDate(repo.pushedAt)} />
-        </dl>
-        <section aria-labelledby="linguagens">
-          <h2
-            id="linguagens"
-            className="mb-3 font-mono text-xs uppercase tracking-widest text-muted"
-          >
-            Linguagens
-          </h2>
-          <LanguageBreakdown repoName={repo.name} />
+        <section aria-labelledby="tecnologias">
+          <SideHeading id="tecnologias">Tecnologias</SideHeading>
+          <ul className="flex flex-wrap gap-2">
+            {project.stack.map((tech) => (
+              <li
+                key={tech}
+                className="rounded-sm border border-line px-2 py-1 font-mono text-xs text-muted"
+              >
+                {tech}
+              </li>
+            ))}
+          </ul>
         </section>
+
+        {isPublic ? (
+          <>
+            <GithubStats project={project} loading={githubLoading} />
+            <section aria-labelledby="linguagens">
+              <SideHeading id="linguagens">Linguagens no repositório</SideHeading>
+              <LanguageBreakdown repoName={project.repoName} />
+            </section>
+          </>
+        ) : (
+          <p className="flex items-start gap-2 rounded-md border border-line p-4 text-sm text-muted">
+            <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            Código-fonte privado. Detalhes técnicos podem ser apresentados sob solicitação.
+          </p>
+        )}
       </aside>
     </article>
+  )
+}
+
+function GithubStats({ project, loading }: { project: ShowcaseProject; loading: boolean }) {
+  const { github } = project
+  if (!github) {
+    return loading ? <Skeleton className="h-16 w-full" /> : null
+  }
+  return (
+    <dl className="grid grid-cols-2 gap-4 font-mono text-sm">
+      {github.stars > 0 && <Stat label="Estrelas" value={formatCompactNumber(github.stars)} />}
+      {github.forks > 0 && <Stat label="Forks" value={formatCompactNumber(github.forks)} />}
+      <Stat label="Criado em" value={formatDate(github.createdAt)} />
+      <Stat label="Último push" value={formatDate(github.pushedAt)} />
+    </dl>
+  )
+}
+
+function SideHeading({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <h2 id={id} className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
+      {children}
+    </h2>
   )
 }
 
@@ -146,24 +183,5 @@ function ExternalButton({
       <ArrowUpRight aria-hidden="true" className="size-4" />
       <span className="sr-only">(abre em nova aba)</span>
     </a>
-  )
-}
-
-function DetailSkeleton() {
-  return (
-    <div aria-busy="true" className="grid gap-12 lg:grid-cols-[1fr_18rem]">
-      <span className="sr-only">Carregando projeto…</span>
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="mt-2 h-12 w-40" />
-      </div>
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    </div>
   )
 }

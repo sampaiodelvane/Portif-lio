@@ -4,7 +4,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 export function ProjectCardSkeleton() {
   return (
     <div className="flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-5">
-      <Skeleton className="h-6 w-2/3" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-6 w-2/3" />
+      </div>
       <div className="flex flex-1 flex-col gap-2">
         <Skeleton className="h-3.5 w-full" />
         <Skeleton className="h-3.5 w-4/5" />

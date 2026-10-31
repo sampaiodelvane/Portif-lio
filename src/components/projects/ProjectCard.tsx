@@ -1,78 +1,85 @@
-import { GitFork, Star } from 'lucide-react'
+import { Lock, Star } from 'lucide-react'
 import { Link } from 'react-router'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { formatCompactNumber, formatRelativeDate } from '@/lib/format'
 import { preloadOnIntent } from '@/routes/page-loaders'
 import { projectPath } from '@/routes/route-paths'
-import type { GithubRepo } from '@/types/github'
+import type { ShowcaseProject } from '@/types/portfolio'
 
 export type CardHeadingLevel = 'h2' | 'h3'
 
 interface ProjectCardProps {
-  repo: GithubRepo
+  project: ShowcaseProject
   /** Nível do título conforme a página: h2 logo abaixo do h1, h3 dentro de uma seção com h2. */
   headingLevel?: CardHeadingLevel
+  /** Dados do GitHub ainda chegando: reserva o espaço do rodapé (sem salto de layout). */
+  githubLoading?: boolean
 }
 
-const MAX_TOPICS = 3
+const MAX_STACK = 4
 
-export function ProjectCard({ repo, headingLevel: Heading = 'h3' }: ProjectCardProps) {
+export function ProjectCard({
+  project,
+  headingLevel: Heading = 'h3',
+  githubLoading = false,
+}: ProjectCardProps) {
+  const { github } = project
+
   return (
     <article className="group relative flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-5 transition-colors hover:border-ink/40">
-      <Heading className="break-words font-serif text-xl leading-snug">
-        {/* O link cobre o card todo (::after), mas o nome continua sendo o texto acessível. */}
-        <Link
-          to={projectPath(repo.name)}
-          {...preloadOnIntent('projectDetail')}
-          className="after:absolute after:inset-0 after:rounded-lg after:content-['']"
-        >
-          {repo.name}
-        </Link>
-      </Heading>
+      <div className="flex flex-col gap-1">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted">{project.context}</p>
+        <Heading className="break-words font-serif text-xl leading-snug">
+          {/* O link cobre o card todo (::after), mas o título continua sendo o texto acessível. */}
+          <Link
+            to={projectPath(project.slug)}
+            {...preloadOnIntent('projectDetail')}
+            className="after:absolute after:inset-0 after:rounded-lg after:content-['']"
+          >
+            {project.title}
+          </Link>
+        </Heading>
+      </div>
 
-      <p className="line-clamp-3 flex-1 text-sm text-muted">
-        {repo.description ?? 'Sem descrição.'}
-      </p>
+      <p className="line-clamp-3 flex-1 text-sm text-muted">{project.summary}</p>
 
-      {repo.topics.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5" aria-label="Tópicos">
-          {repo.topics.slice(0, MAX_TOPICS).map((topic) => (
-            <li
-              key={topic}
-              className="rounded-sm border border-line px-1.5 py-0.5 font-mono text-xs text-muted"
-            >
-              {topic}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="flex flex-wrap gap-1.5" aria-label="Tecnologias">
+        {project.stack.slice(0, MAX_STACK).map((tech) => (
+          <li
+            key={tech}
+            className="rounded-sm border border-line px-1.5 py-0.5 font-mono text-xs text-muted"
+          >
+            {tech}
+          </li>
+        ))}
+      </ul>
 
-      <dl className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-3 font-mono text-xs text-muted">
-        {repo.language && (
-          <div className="flex items-center gap-1.5">
-            <dt className="sr-only">Linguagem</dt>
-            <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
-            <dd>{repo.language}</dd>
-          </div>
+      <div className="flex min-h-5 flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-3 font-mono text-xs text-muted">
+        {project.visibility === 'private' ? (
+          <span className="inline-flex items-center gap-1.5">
+            <Lock aria-hidden="true" className="size-3.5" />
+            Código privado
+          </span>
+        ) : github ? (
+          <>
+            {/* "0 estrelas" não agrega à vitrine: o número só aparece quando existe. */}
+            {github.stars > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Star aria-label="Estrelas" className="size-3.5" />
+                {formatCompactNumber(github.stars)}
+              </span>
+            )}
+            <span className="ml-auto">
+              Atualizado{' '}
+              <time dateTime={github.pushedAt}>{formatRelativeDate(github.pushedAt)}</time>
+            </span>
+          </>
+        ) : githubLoading ? (
+          <Skeleton className="h-3.5 w-32" />
+        ) : (
+          <span>Código aberto no GitHub</span>
         )}
-        <div className="flex items-center gap-1">
-          <dt>
-            <Star aria-label="Estrelas" className="size-3.5" />
-          </dt>
-          <dd>{formatCompactNumber(repo.stars)}</dd>
-        </div>
-        <div className="flex items-center gap-1">
-          <dt>
-            <GitFork aria-label="Forks" className="size-3.5" />
-          </dt>
-          <dd>{formatCompactNumber(repo.forks)}</dd>
-        </div>
-        <div className="ml-auto">
-          <dt className="sr-only">Atualizado</dt>
-          <dd>
-            <time dateTime={repo.pushedAt}>{formatRelativeDate(repo.pushedAt)}</time>
-          </dd>
-        </div>
-      </dl>
+      </div>
     </article>
   )
 }

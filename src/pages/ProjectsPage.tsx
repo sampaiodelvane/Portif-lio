@@ -1,29 +1,24 @@
-import { FolderOpen, SearchX } from 'lucide-react'
+import { SearchX } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { PageHeading } from '@/components/PageHeading'
-import { GithubErrorMessage } from '@/components/projects/GithubErrorMessage'
-import { MissingUsernameMessage } from '@/components/projects/MissingUsernameMessage'
 import { ProjectFilters } from '@/components/projects/ProjectFilters'
-import { ProjectGrid, ProjectGridSkeleton } from '@/components/projects/ProjectGrid'
+import { ProjectGrid } from '@/components/projects/ProjectGrid'
 import { StatusMessage } from '@/components/ui/StatusMessage'
-import { useGithubRepos } from '@/hooks/useGithubRepos'
-import { filterRepos, listLanguages } from '@/lib/repo-filters'
+import { usePortfolioProjects } from '@/hooks/usePortfolioProjects'
+import { filterProjects, listTechnologies } from '@/lib/showcase'
 
 export default function ProjectsPage() {
-  const { data: repos, isPending, isError, error, refetch, username } = useGithubRepos()
+  const { projects, isGithubLoading } = usePortfolioProjects()
   // Filtros na URL: links compartilháveis e o "voltar" do navegador restaura a busca.
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
-  const language = searchParams.get('lang') ?? ''
+  const tech = searchParams.get('tech') ?? ''
 
-  const languages = useMemo(() => listLanguages(repos ?? []), [repos])
-  const visibleRepos = useMemo(
-    () => filterRepos(repos ?? [], { query, language }),
-    [repos, query, language],
-  )
+  const technologies = useMemo(() => listTechnologies(projects), [projects])
+  const visible = useMemo(() => filterProjects(projects, { query, tech }), [projects, query, tech])
 
-  function updateParam(key: 'q' | 'lang', value: string) {
+  function updateParam(key: 'q' | 'tech', value: string) {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
@@ -35,34 +30,28 @@ export default function ProjectsPage() {
     )
   }
 
-  function renderContent() {
-    if (username === null) return <MissingUsernameMessage />
-    if (isPending) return <ProjectGridSkeleton />
-    if (isError) return <GithubErrorMessage error={error} onRetry={() => refetch()} />
+  return (
+    <>
+      <title>Projetos · Portfólio</title>
+      <PageHeading eyebrow="Trabalhos selecionados" title="Projetos">
+        Projetos acadêmicos e profissionais, com o contexto, as funcionalidades e as tecnologias de
+        cada um.
+      </PageHeading>
 
-    if (repos.length === 0) {
-      return (
-        <StatusMessage icon={FolderOpen} title="Nenhum repositório público ainda">
-          Assim que houver projetos públicos em @{username}, eles aparecem aqui.
-        </StatusMessage>
-      )
-    }
-
-    return (
       <div className="flex flex-col gap-6">
         <ProjectFilters
           query={query}
-          language={language}
-          languages={languages}
+          tech={tech}
+          technologies={technologies}
           onQueryChange={(value) => updateParam('q', value)}
-          onLanguageChange={(value) => updateParam('lang', value)}
+          onTechChange={(value) => updateParam('tech', value)}
         />
         <p aria-live="polite" className="font-mono text-xs text-muted">
-          {visibleRepos.length} de {repos.length} projetos
+          {visible.length} de {projects.length} projetos
         </p>
-        {visibleRepos.length > 0 ? (
+        {visible.length > 0 ? (
           // h2: os cards ficam logo abaixo do h1 da página (hierarquia de títulos sem saltos).
-          <ProjectGrid repos={visibleRepos} headingLevel="h2" />
+          <ProjectGrid projects={visible} headingLevel="h2" githubLoading={isGithubLoading} />
         ) : (
           <StatusMessage
             icon={SearchX}
@@ -77,21 +66,10 @@ export default function ProjectsPage() {
               </button>
             }
           >
-            Nenhum repositório corresponde aos filtros atuais.
+            Nenhum projeto corresponde aos filtros atuais.
           </StatusMessage>
         )}
       </div>
-    )
-  }
-
-  return (
-    <>
-      <title>Projetos · Portfólio</title>
-      <PageHeading eyebrow="Repositórios" title="Projetos">
-        Repositórios públicos do GitHub, do mais recente ao mais antigo. Forks e arquivados ficam de
-        fora.
-      </PageHeading>
-      {renderContent()}
     </>
   )
 }

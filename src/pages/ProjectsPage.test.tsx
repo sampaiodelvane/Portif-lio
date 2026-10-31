@@ -1,46 +1,58 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { PORTFOLIO_PROJECTS } from '@/content/projects'
 import { jsonResponse, makeRepoDto, mockFetch } from '@/test/github-fixtures'
 import { renderRoute } from '@/test/render-route'
 
-const REPOS_URL = /\/users\/octocat\/repos/
+const TOTAL = PORTFOLIO_PROJECTS.length
+const REPOS_URL = /\/users\/sampaiodelvane\/repos/
 
-describe('ProjectsPage', () => {
-  it('mostra skeleton enquanto carrega e depois os cards com link canônico', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
+const cardFor = async (title: string) =>
+  (await screen.findByRole('link', { name: title })).closest('article') as HTMLElement
+
+describe('ProjectsPage — vitrine curada', () => {
+  it('lista o catálogo na hora, com nomes de exibição e URL canônica, sem depender da API', async () => {
+    const fetchMock = mockFetch([])
+    renderRoute('/projetos')
+
+    expect(await screen.findByRole('link', { name: 'Página de Vinhos' })).toHaveAttribute(
+      'href',
+      '/projetos/pagina-de-vinhos',
+    )
+    expect(screen.getByRole('link', { name: 'Novo TV Time' })).toHaveAttribute(
+      'href',
+      '/projetos/novo-tv-time',
+    )
+    expect(screen.getByText(`${TOTAL} de ${TOTAL} projetos`)).toBeInTheDocument()
+    // Sem VITE_GITHUB_USERNAME a API nem é chamada.
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('marca projetos privados e complementa os públicos com dados do GitHub', async () => {
+    vi.stubEnv('VITE_GITHUB_USERNAME', 'sampaiodelvane')
     mockFetch([
       {
         match: REPOS_URL,
-        respond: () => jsonResponse([makeRepoDto({ name: 'portfolio', description: 'Meu site' })]),
+        respond: () =>
+          jsonResponse([
+            makeRepoDto({ name: 'CHP4-WebDevelopment', stargazers_count: 12 }),
+            // Mesmo que a API devolvesse um repo com nome de um privado, ele não é usado.
+            makeRepoDto({ name: 'gb-higienizacoes', stargazers_count: 999 }),
+          ]),
       },
     ])
     renderRoute('/projetos')
 
-    expect(await screen.findByText('Carregando projetos…')).toBeInTheDocument()
-    const link = await screen.findByRole('link', { name: 'portfolio' })
-    expect(link).toHaveAttribute('href', '/projetos/portfolio')
-    expect(screen.getByText('Meu site')).toBeInTheDocument()
+    const tvTime = await cardFor('Novo TV Time')
+    expect(await within(tvTime).findByText('12')).toBeInTheDocument()
+    const gb = await cardFor('G&B Higienizações')
+    expect(within(gb).getByText('Código privado')).toBeInTheDocument()
+    expect(within(gb).queryByText('999')).not.toBeInTheDocument()
   })
 
-  it('trata lista vazia', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
-    mockFetch([{ match: REPOS_URL, respond: () => jsonResponse([]) }])
-    renderRoute('/projetos')
-
-    expect(await screen.findByText('Nenhum repositório público ainda')).toBeInTheDocument()
-  })
-
-  it('avisa quando VITE_GITHUB_USERNAME não está configurado, sem chamar a API', async () => {
-    const fetchMock = mockFetch([])
-    renderRoute('/projetos')
-
-    expect(await screen.findByText('Usuário do GitHub não configurado')).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('explica o rate limit sem oferecer retry (que gastaria mais cota)', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
+  it('com a cota do GitHub esgotada, a vitrine continua completa e sem erro', async () => {
+    vi.stubEnv('VITE_GITHUB_USERNAME', 'sampaiodelvane')
     mockFetch([
       {
         match: REPOS_URL,
@@ -49,79 +61,98 @@ describe('ProjectsPage', () => {
     ])
     renderRoute('/projetos')
 
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Limite da API do GitHub atingido')
-    expect(within(alert).queryByRole('button')).not.toBeInTheDocument()
+    const vinhos = await cardFor('Página de Vinhos')
+    expect(await within(vinhos).findByText('Código aberto no GitHub')).toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(TOTAL)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('permite tentar de novo após erro do servidor', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
-    let call = 0
-    mockFetch([
-      {
-        match: REPOS_URL,
-        respond: () =>
-          call++ === 0
-            ? jsonResponse({}, { status: 500 })
-            : jsonResponse([makeRepoDto({ name: 'voltou' })]),
-      },
-    ])
-    const user = userEvent.setup()
-    renderRoute('/projetos')
-
-    await user.click(await screen.findByRole('button', { name: 'Tentar novamente' }))
-
-    expect(await screen.findByRole('link', { name: 'voltou' })).toBeInTheDocument()
-  })
-
-  it('filtra pela busca e guarda o filtro na URL', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
-    mockFetch([
-      {
-        match: REPOS_URL,
-        respond: () =>
-          jsonResponse([makeRepoDto({ name: 'portfolio' }), makeRepoDto({ name: 'iot-esp32' })]),
-      },
-    ])
+  it('busca em descrição/funcionalidades e guarda o filtro na URL', async () => {
     const user = userEvent.setup()
     const { router } = renderRoute('/projetos')
 
-    await user.type(await screen.findByRole('searchbox', { name: 'Buscar projetos' }), 'iot')
+    await user.type(await screen.findByRole('searchbox', { name: 'Buscar projetos' }), 'satélite')
 
-    expect(screen.getByRole('link', { name: 'iot-esp32' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'portfolio' })).not.toBeInTheDocument()
-    expect(screen.getByText('1 de 2 projetos')).toBeInTheDocument()
-    expect(router.state.location.search).toBe('?q=iot')
+    expect(screen.getByRole('link', { name: 'TerraVis' })).toBeInTheDocument()
+    expect(screen.getByText(`1 de ${TOTAL} projetos`)).toBeInTheDocument()
+    expect(router.state.location.search).toBe('?q=sat%C3%A9lite')
+  })
+
+  it('filtra por tecnologia e permite limpar quando nada corresponde', async () => {
+    const user = userEvent.setup()
+    renderRoute('/projetos?tech=Supabase')
+
+    expect(await screen.findByRole('link', { name: 'G&B Higienizações' })).toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(1)
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar projetos' }), 'zzz')
+    await user.click(screen.getByRole('button', { name: 'Limpar filtros' }))
+
+    expect(screen.getAllByRole('article')).toHaveLength(TOTAL)
   })
 })
 
 describe('ProjectDetailPage', () => {
-  it('mostra detalhes, linguagens e link externo seguro', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
+  it('projeto público: funcionalidades, link do código, linguagens e estatísticas', async () => {
+    vi.stubEnv('VITE_GITHUB_USERNAME', 'sampaiodelvane')
     mockFetch([
-      { match: /\/languages$/, respond: () => jsonResponse({ TypeScript: 900, CSS: 100 }) },
+      { match: /\/languages$/, respond: () => jsonResponse({ JavaScript: 900, CSS: 100 }) },
       {
-        match: /\/repos\/octocat\/portfolio$/,
+        match: REPOS_URL,
         respond: () =>
-          jsonResponse(
-            makeRepoDto({ name: 'portfolio', homepage: 'portfolio.dev', topics: ['react'] }),
-          ),
+          jsonResponse([
+            makeRepoDto({
+              name: 'CHP4-WebDevelopment',
+              html_url: 'https://github.com/sampaiodelvane/CHP4-WebDevelopment',
+            }),
+          ]),
       },
     ])
-    renderRoute('/projetos/portfolio')
+    renderRoute('/projetos/novo-tv-time')
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'portfolio' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /ver demo/i })).toHaveAttribute(
+    expect(await screen.findByRole('heading', { level: 1, name: 'Novo TV Time' })).toBeVisible()
+    expect(document.title).toBe('Novo TV Time · Portfólio')
+    const features = screen.getByRole('region', { name: 'Funcionalidades' })
+    expect(within(features).getAllByRole('listitem').length).toBeGreaterThanOrEqual(3)
+    expect(screen.getByRole('link', { name: /ver código no github/i })).toHaveAttribute(
       'href',
-      'https://portfolio.dev/',
+      'https://github.com/sampaiodelvane/CHP4-WebDevelopment',
     )
     expect(await screen.findByText('90%')).toBeInTheDocument()
-    expect(screen.getByText('react')).toBeInTheDocument()
+    expect(await screen.findByText('Último push')).toBeInTheDocument()
   })
 
-  it('mostra "projeto não encontrado" para repositório inexistente', async () => {
-    vi.stubEnv('VITE_GITHUB_USERNAME', 'octocat')
-    mockFetch([{ match: /.*/, respond: () => jsonResponse({}, { status: 404 }) }])
+  it('projeto privado: sem link de código e sem consultar a API de linguagens', async () => {
+    vi.stubEnv('VITE_GITHUB_USERNAME', 'sampaiodelvane')
+    const fetchMock = mockFetch([{ match: REPOS_URL, respond: () => jsonResponse([]) }])
+    renderRoute('/projetos/gb-higienizacoes')
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'G&B Higienizações' }),
+    ).toBeVisible()
+    expect(screen.getByText(/Código-fonte privado/)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /github/i })).not.toBeInTheDocument()
+    const calledUrls = fetchMock.mock.calls.map(([url]) => String(url))
+    expect(calledUrls.some((url) => url.includes('/languages'))).toBe(false)
+  })
+
+  it('mostra o link publicado quando o projeto tem um', async () => {
+    renderRoute('/projetos/terravis')
+
+    expect(await screen.findByRole('link', { name: /ver online/i })).toHaveAttribute(
+      'href',
+      'https://sampaiodelvane.github.io/TerraVis/',
+    )
+  })
+
+  it('texto provisório (draft) não exibe a seção de funcionalidades vazia', async () => {
+    renderRoute('/projetos/escalasrede7')
+
+    await screen.findByRole('heading', { level: 1, name: 'escalasrede7' })
+    expect(screen.queryByRole('region', { name: 'Funcionalidades' })).not.toBeInTheDocument()
+  })
+
+  it('slug inexistente mostra "projeto não encontrado"', async () => {
     renderRoute('/projetos/fantasma')
 
     expect(await screen.findByText('Projeto não encontrado')).toBeInTheDocument()

@@ -7,7 +7,7 @@ import type { PublicBackend } from '@/services/backend/backend-types'
 // evita carregar ~50 kB do supabase-js na home e no contato.
 // A segurança é das políticas RLS: anônimo só pode INSERIR mensagem e LER destaques.
 
-const featuredSchema = z.array(z.object({ repo_name: z.string(), position: z.number() }))
+const featuredSchema = z.array(z.object({ project_slug: z.string(), position: z.number() }))
 
 export function createSupabasePublicBackend({ url, anonKey }: SupabaseConfig): PublicBackend {
   const headers = {
@@ -37,10 +37,12 @@ export function createSupabasePublicBackend({ url, anonKey }: SupabaseConfig): P
     },
 
     async listFeatured() {
-      const response = await request('featured_projects?select=repo_name,position&order=position')
+      const response = await request(
+        'featured_projects?select=project_slug,position&order=position',
+      )
       return featuredSchema
         .parse(await response.json())
-        .map((row) => ({ repoName: row.repo_name, position: row.position }))
+        .map((row) => ({ slug: row.project_slug, position: row.position }))
     },
   }
 }
