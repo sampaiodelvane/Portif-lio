@@ -8,6 +8,18 @@
     <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Portfólio</title>
+    <!-- Aplica o tema antes da primeira pintura (sem flash). Chave igual a src/lib/theme-storage.ts -->
+    <script>
+      var theme
+      try {
+        theme = localStorage.getItem('portfolio-theme')
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.classList.toggle('dark', theme === 'dark')
+        document.documentElement.style.colorScheme = theme
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
