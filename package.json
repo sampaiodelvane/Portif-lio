@@ -19,6 +19,8 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check-env": "node scripts/check-env-staged.mjs",
+    "perf:bundle": "node scripts/bundle-report.mjs",
+    "perf:lighthouse": "node scripts/lighthouse.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -51,8 +53,10 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
+    "chrome-launcher": "^1.2.2",
     "husky": "^9.1.7",
     "jsdom": "^30.1.3",
+    "lighthouse": "^13.6.0",
     "lint-staged": "^17.6.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
