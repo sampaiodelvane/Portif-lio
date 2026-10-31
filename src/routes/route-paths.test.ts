@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { projectPath, ROUTE_PATHS } from '@/routes/route-paths'
+import { projectPath, ROUTE_PATHS, safeRedirectPath } from '@/routes/route-paths'
+
+describe('safeRedirectPath', () => {
+  it('aceita caminhos internos', () => {
+    expect(safeRedirectPath('/admin?aba=1')).toBe('/admin?aba=1')
+  })
+
+  it('bloqueia open redirect e loops para o login', () => {
+    expect(safeRedirectPath('https://malicioso.com')).toBe('/admin')
+    expect(safeRedirectPath('//malicioso.com')).toBe('/admin')
+    expect(safeRedirectPath('/\\malicioso.com')).toBe('/admin')
+    expect(safeRedirectPath('/login')).toBe('/admin')
+    expect(safeRedirectPath(undefined)).toBe('/admin')
+  })
+})
 
 describe('projectPath', () => {
   it('monta a URL canônica do projeto', () => {
