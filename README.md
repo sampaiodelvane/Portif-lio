@@ -10,7 +10,7 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 | **Demo**              | `https://<seu-projeto>.vercel.app` _(preencher após o deploy)_                                  |
 | **Repositório**       | [github.com/sampaiodelvane/Portif-lio](https://github.com/sampaiodelvane/Portif-lio)            |
 | **Lighthouse mobile** | Performance **97–100** · Acessibilidade **100** · SEO **100** ([detalhes](docs/performance.md)) |
-| **Testes**            | 71 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
+| **Testes**            | 76 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
 
 ---
 
@@ -69,12 +69,13 @@ acessa, então cada visitante só vê o próprio navegador.
 
 ## 2. Funcionalidades
 
-- **Vitrine curada de projetos** — 6 projetos selecionados (públicos e privados) com nome de
+- **Vitrine curada de projetos** — 7 projetos selecionados (públicos e privados) com nome de
   exibição, contexto, descrição, funcionalidades e tecnologias escritos à mão em
   [`src/content/projects.ts`](src/content/projects.ts). Nos públicos, a API do GitHub
   complementa com data do último push, porcentagem de linguagens e link do código. Busca (sem
   acento/maiúscula) e filtro por tecnologia guardados na URL (`?q=&tech=`); detalhe em URL
-  canônica e legível, como `/projetos/pagina-de-vinhos`.
+  canônica e legível, como `/projetos/pagina-de-vinhos`. Cada projeto pode ter link do sistema
+  publicado e de uma demonstração pública com dados fictícios (que ganha o destaque).
 - **Vitrine na home** — até 3 projetos escolhidos no painel; sem escolha, os 3 primeiros do catálogo.
 - **Contato** — React Hook Form + Zod, erros acessíveis por campo, botão bloqueado durante o
   envio, honeypot anti-bot; envia e-mail (EmailJS) e grava cópia no painel em paralelo.
@@ -203,7 +204,7 @@ cota volta.
 
 ## 5. Qualidade: testes, lint e CI
 
-**71 testes**, cobertura de **86% das instruções / 87% das linhas**. Nenhum teste acessa a
+**76 testes**, cobertura de **86% das instruções / 87% das linhas**. Nenhum teste acessa a
 rede: o setup bloqueia `fetch` e zera as variáveis `VITE_*`; cada teste declara o que precisa
 com `mockFetch()` e `vi.stubEnv()`.
 
@@ -379,7 +380,7 @@ Tempo de fala de referência entre colchetes.
 ### Checklist de entrega
 
 - [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` (falta cadastrar na Vercel)
-- [x] Descrição e funcionalidades dos 6 projetos da vitrine (`src/content/projects.ts`)
+- [x] Descrição e funcionalidades dos 7 projetos da vitrine (`src/content/projects.ts`)
 - [ ] Deploy na Vercel e links preenchidos no topo deste README
 - [x] Repositório no GitHub com o CI verde
 - [ ] (Opcional) Supabase e EmailJS configurados
