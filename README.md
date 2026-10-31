@@ -7,10 +7,10 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 
 |                       |                                                                                                 |
 | --------------------- | ----------------------------------------------------------------------------------------------- |
-| **Demo**              | `https://<seu-projeto>.vercel.app` _(preencher após o deploy)_                                  |
+| **Demo**              | [delvane-portfolio.vercel.app](https://delvane-portfolio.vercel.app)                            |
 | **Repositório**       | [github.com/sampaiodelvane/Portif-lio](https://github.com/sampaiodelvane/Portif-lio)            |
 | **Lighthouse mobile** | Performance **97–100** · Acessibilidade **100** · SEO **100** ([detalhes](docs/performance.md)) |
-| **Testes**            | 76 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
+| **Testes**            | 79 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
 
 ---
 
@@ -379,9 +379,10 @@ Tempo de fala de referência entre colchetes.
 
 ### Checklist de entrega
 
-- [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` (falta cadastrar na Vercel)
+- [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` e na Vercel (Production e Preview)
 - [x] Descrição e funcionalidades dos 7 projetos da vitrine (`src/content/projects.ts`)
-- [ ] Deploy na Vercel e links preenchidos no topo deste README
+- [x] Deploy na Vercel e links preenchidos no topo deste README
+- [x] Web Analytics e Speed Insights ativos no painel da Vercel
 - [x] Repositório no GitHub com o CI verde
 - [ ] (Opcional) Supabase e EmailJS configurados
 - [ ] Vídeo gravado seguindo a seção 7
