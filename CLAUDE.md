@@ -17,7 +17,7 @@ contato e um painel administrativo protegido.
 | Build         | Vite 8                                                             |
 | UI            | React 19 + TypeScript 7 (strict)                                   |
 | Estilo        | Tailwind CSS v4 (tokens em `src/index.css`, sem `tailwind.config`) |
-| Rotas         | React Router v7 (modo declarativo/SPA) + `React.lazy`              |
+| Rotas         | React Router v8 (data router, SPA) + `React.lazy`                  |
 | Dados remotos | TanStack Query v5                                                  |
 | Formulários   | React Hook Form + Zod                                              |
 | Auth / BD     | Supabase (Auth + Postgres com RLS)                                 |
@@ -57,6 +57,21 @@ src/
 - Imports internos sempre via alias `@/`.
 
 O Biome valida nomes de arquivo (`useFilenamingConvention`) e default exports (`noDefaultExport`).
+
+## Padrões de rotas, contexto e erros
+
+- **Nova página:** criar em `src/pages/NomePage.tsx` (default export), registrar o caminho em
+  `routes/route-paths.ts` e a rota com `lazy()` em `routes/app-routes.tsx`. Nunca escrever URL
+  "na mão" — usar `ROUTE_PATHS` ou helpers como `projectPath(repoName)`.
+- **Título da aba:** cada página renderiza seu próprio `<title>` (React 19 move para o `<head>`).
+- **Imports do router:** tudo de `react-router`; só `RouterProvider` vem de `react-router/dom`.
+- **Contexto:** o objeto do contexto fica em `context/*-context.ts` e o Provider em
+  `context/*Provider.tsx`, para não quebrar o Fast Refresh. O consumo é sempre via hook em
+  `hooks/` (ex.: `useTheme`), que lança erro se usado fora do Provider.
+- **Erros:** `RouteErrorPage` é o `errorElement` e **não** pode ser lazy (precisa funcionar
+  quando um chunk falha). Rotas desconhecidas caem no `path: '*'` (404 dentro do layout).
+- **Tema:** chave `portfolio-theme` no localStorage, usada também pelo script inline do
+  `index.html` (evita flash). Se mudar a chave, mudar nos dois lugares.
 
 ## Identidade visual — obrigatório
 
