@@ -70,6 +70,14 @@ O Biome valida nomes de arquivo (`useFilenamingConvention`) e default exports (`
   `hooks/` (ex.: `useTheme`), que lança erro se usado fora do Provider.
 - **Erros:** `RouteErrorPage` é o `errorElement` e **não** pode ser lazy (precisa funcionar
   quando um chunk falha). Rotas desconhecidas caem no `path: '*'` (404 dentro do layout).
+- **Dados remotos:** componente nunca chama `fetch`. Fluxo: `services/*` (fetch + validação Zod +
+  mapeamento para tipos de domínio) → `hooks/use*` (TanStack Query, chaves em
+  `hooks/github-query-keys.ts`) → componentes. Erros da API são `GithubApiError` com `kind`;
+  a UI escolhe a mensagem pelo `kind`, nunca pelo texto.
+- **Cota do GitHub (60 req/h sem token):** não reduzir `staleTime` sem motivo, não fazer retry de
+  `rate-limit`/`not-found`, manter o cache por ETag de `github-client.ts`.
+- **Testes sem rede:** o setup bloqueia `fetch` e zera `VITE_*`. Use `mockFetch()` e
+  `vi.stubEnv()`; renderize páginas com `renderRoute()` de `src/test/`.
 - **Tema:** chave `portfolio-theme` no localStorage, usada também pelo script inline do
   `index.html` (evita flash). Se mudar a chave, mudar nos dois lugares.
 
