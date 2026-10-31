@@ -48,7 +48,10 @@ interface ProjectDetailsProps {
 
 function ProjectDetails({ project, githubUrl, githubLoading }: ProjectDetailsProps) {
   const liveUrl = toSafeExternalUrl(project.liveUrl ?? project.github?.homepage)
+  const demoUrl = toSafeExternalUrl(project.demoUrl)
   const isPublic = project.visibility === 'public'
+  // O primeiro link disponível ganha destaque: demonstração > sistema publicado > código.
+  const primary = demoUrl ? 'demo' : liveUrl ? 'live' : 'github'
 
   return (
     <article className="grid gap-12 lg:grid-cols-[1fr_18rem]">
@@ -63,15 +66,20 @@ function ProjectDetails({ project, githubUrl, githubLoading }: ProjectDetailsPro
           <p className="max-w-prose text-lg text-muted">{project.description}</p>
         </header>
 
-        {(liveUrl || githubUrl) && (
+        {(demoUrl || liveUrl || githubUrl) && (
           <div className="flex flex-wrap gap-3">
+            {demoUrl && (
+              <ExternalButton href={demoUrl} primary={primary === 'demo'}>
+                Ver demonstração
+              </ExternalButton>
+            )}
             {liveUrl && (
-              <ExternalButton href={liveUrl} primary>
-                Ver online
+              <ExternalButton href={liveUrl} primary={primary === 'live'}>
+                {demoUrl ? 'Acessar o sistema' : 'Ver online'}
               </ExternalButton>
             )}
             {githubUrl && (
-              <ExternalButton href={githubUrl} primary={!liveUrl}>
+              <ExternalButton href={githubUrl} primary={primary === 'github'}>
                 Ver código no GitHub
               </ExternalButton>
             )}

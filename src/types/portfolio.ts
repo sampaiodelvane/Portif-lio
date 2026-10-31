@@ -18,7 +18,10 @@ export interface PortfolioProject {
   stack: string[]
   /** Privado: a API pública do GitHub não o enxerga, então tudo vem do catálogo. */
   visibility: 'public' | 'private'
+  /** Sistema publicado (pode exigir login). */
   liveUrl?: string
+  /** Demonstração pública com dados fictícios: o link mais útil para quem visita o portfólio. */
+  demoUrl?: string
   /** Texto provisório, ainda não revisado pelo autor. */
   draft?: boolean
 }

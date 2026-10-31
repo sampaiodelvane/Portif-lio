@@ -22,9 +22,11 @@ describe('catálogo de projetos', () => {
     for (const project of PORTFOLIO_PROJECTS) expect(project.stack.length).toBeGreaterThan(0)
   })
 
-  it('links publicados são http(s) válidos', () => {
-    for (const project of PORTFOLIO_PROJECTS.filter((p) => p.liveUrl)) {
-      expect(toSafeExternalUrl(project.liveUrl), project.slug).not.toBeNull()
+  it('links publicados e de demonstração são http(s) válidos', () => {
+    for (const project of PORTFOLIO_PROJECTS) {
+      for (const url of [project.liveUrl, project.demoUrl].filter(Boolean)) {
+        expect(toSafeExternalUrl(url), project.slug).not.toBeNull()
+      }
     }
   })
 
