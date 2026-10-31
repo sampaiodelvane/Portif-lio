@@ -48,7 +48,7 @@ const catalog = [
   project({
     slug: 'vinhos',
     repoName: 'Landing-Page',
-    title: 'Página de Vinhos',
+    title: 'Adega Bordô',
     stack: ['HTML', 'CSS'],
   }),
   project({

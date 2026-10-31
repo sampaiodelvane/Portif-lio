@@ -71,9 +71,9 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     stack: ['React', 'TypeScript', 'Vite', 'Supabase', 'CSS Modules'],
   },
   {
-    slug: 'pagina-de-vinhos',
+    slug: 'adega-bordo',
     repoName: 'Landing-Page---Tema-Livre-CHP-Front-End-Design-',
-    title: 'Página de Vinhos',
+    title: 'Adega Bordô',
     context: 'FIAP · Front-End Design',
     visibility: 'public',
     liveUrl: 'https://sampaiodelvane.github.io/Landing-Page---Tema-Livre-CHP-Front-End-Design-/',

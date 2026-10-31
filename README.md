@@ -74,7 +74,7 @@ acessa, então cada visitante só vê o próprio navegador.
   [`src/content/projects.ts`](src/content/projects.ts). Nos públicos, a API do GitHub
   complementa com data do último push, porcentagem de linguagens e link do código. Busca (sem
   acento/maiúscula) e filtro por tecnologia guardados na URL (`?q=&tech=`); detalhe em URL
-  canônica e legível, como `/projetos/pagina-de-vinhos`. Cada projeto pode ter link do sistema
+  canônica e legível, como `/projetos/adega-bordo`. Cada projeto pode ter link do sistema
   publicado e de uma demonstração pública com dados fictícios (que ganha o destaque).
 - **Vitrine na home** — até 3 projetos escolhidos no painel; sem escolha, os 3 primeiros do catálogo.
 - **Contato** — React Hook Form + Zod, erros acessíveis por campo, botão bloqueado durante o
@@ -316,7 +316,7 @@ Tempo de fala de referência entre colchetes.
 
 | Tempo | Tela                                         | Fala (resumo)                                                                                                    |
 | ----- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 0:20  | Home → Projetos → busca "react" → detalhe    | Tour: vitrine curada (públicos e privados), filtros na URL, detalhe em `/projetos/pagina-de-vinhos`.             |
+| 0:20  | Home → Projetos → busca "react" → detalhe    | Tour: vitrine curada (públicos e privados), filtros na URL, detalhe em `/projetos/adega-bordo`.                  |
 | 0:50  | Alternar tema; recarregar                    | Tema persistido e aplicado antes da pintura, sem flash.                                                          |
 | 1:05  | Contato: enviar vazio, depois preencher      | Validação acessível com RHF + Zod; botão bloqueia durante o envio.                                               |
 | 1:25  | `/admin` → redireciona → login demo → painel | Rota protegida, volta à URL pedida; marcar como lida; escolher destaque e ver na home.                           |
