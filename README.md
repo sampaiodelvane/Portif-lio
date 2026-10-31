@@ -389,6 +389,6 @@ Antes da ativação, as mensagens ficam só no painel.
 - [x] Deploy na Vercel e links preenchidos no topo deste README
 - [x] Web Analytics e Speed Insights ativos no painel da Vercel
 - [x] Repositório no GitHub com o CI verde
-- [ ] Formulário ativado no FormSubmit (clique no e-mail de ativação)
+- [x] Formulário ativado no FormSubmit e testado em produção (e-mail recebido)
 - [ ] (Opcional) Supabase configurado
 - [ ] Vídeo gravado seguindo a seção 7
