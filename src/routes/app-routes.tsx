@@ -3,17 +3,19 @@ import type { RouteObject } from 'react-router'
 import { createBrowserRouter } from 'react-router'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { RouteErrorPage } from '@/components/RouteErrorPage'
+// Home é estática de propósito (contém o LCP). Ver comentário em pages/HomePage.tsx.
+import HomePage from '@/pages/HomePage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
+import { pageLoaders } from '@/routes/page-loaders'
 import { ROUTE_PATHS } from '@/routes/route-paths'
 
-// Cada página vira um chunk próprio: o usuário só baixa o código da rota que visita.
-const HomePage = lazy(() => import('@/pages/HomePage'))
-const ProjectsPage = lazy(() => import('@/pages/ProjectsPage'))
-const ProjectDetailPage = lazy(() => import('@/pages/ProjectDetailPage'))
-const ContactPage = lazy(() => import('@/pages/ContactPage'))
-const LoginPage = lazy(() => import('@/pages/LoginPage'))
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
+// Demais páginas viram chunks próprios: o usuário só baixa o código da rota que visita.
+const ProjectsPage = lazy(pageLoaders.projects)
+const ProjectDetailPage = lazy(pageLoaders.projectDetail)
+const ContactPage = lazy(pageLoaders.contact)
+const LoginPage = lazy(pageLoaders.login)
+const DashboardPage = lazy(pageLoaders.dashboard)
+const NotFoundPage = lazy(pageLoaders.notFound)
 // Auth (e o supabase-js, quando configurado) só carrega na área restrita.
 const AuthBoundary = lazy(() =>
   import('@/routes/AuthBoundary').then((m) => ({ default: m.AuthBoundary })),

@@ -1,8 +1,20 @@
 import { ArrowRight } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
-import { RecentProjects } from '@/components/projects/RecentProjects'
+import { ProjectGridSkeleton } from '@/components/projects/ProjectGrid'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ROUTE_PATHS } from '@/routes/route-paths'
 
+// A vitrine fica abaixo da dobra e puxa Zod + serviço do GitHub: carrega depois do hero.
+const RecentProjects = lazy(() =>
+  import('@/components/projects/RecentProjects').then((m) => ({ default: m.RecentProjects })),
+)
+
+/**
+ * Página de entrada: é a ÚNICA página fora do code-splitting (import estático em app-routes).
+ * O <h1> é o elemento de LCP; se a página fosse lazy, o navegador só descobriria o chunk
+ * dela depois de executar o JS principal (uma ida e volta extra na rede móvel).
+ */
 export default function HomePage() {
   return (
     <>
@@ -34,7 +46,19 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-      <RecentProjects />
+      <Suspense fallback={<ShowcaseSkeleton />}>
+        <RecentProjects />
+      </Suspense>
     </>
+  )
+}
+
+/** Mesmo formato da vitrine (título + 3 cards) para o conteúdo não "pular" ao chegar. */
+function ShowcaseSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 border-t border-line pt-12">
+      <Skeleton className="h-9 w-64" />
+      <ProjectGridSkeleton count={3} />
+    </div>
   )
 }

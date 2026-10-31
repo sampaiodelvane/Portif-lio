@@ -61,7 +61,8 @@ export default function ProjectsPage() {
           {visibleRepos.length} de {repos.length} projetos
         </p>
         {visibleRepos.length > 0 ? (
-          <ProjectGrid repos={visibleRepos} />
+          // h2: os cards ficam logo abaixo do h1 da página (hierarquia de títulos sem saltos).
+          <ProjectGrid repos={visibleRepos} headingLevel="h2" />
         ) : (
           <StatusMessage
             icon={SearchX}

@@ -1,27 +1,33 @@
 import { GitFork, Star } from 'lucide-react'
 import { Link } from 'react-router'
 import { formatCompactNumber, formatRelativeDate } from '@/lib/format'
+import { preloadOnIntent } from '@/routes/page-loaders'
 import { projectPath } from '@/routes/route-paths'
 import type { GithubRepo } from '@/types/github'
 
+export type CardHeadingLevel = 'h2' | 'h3'
+
 interface ProjectCardProps {
   repo: GithubRepo
+  /** Nível do título conforme a página: h2 logo abaixo do h1, h3 dentro de uma seção com h2. */
+  headingLevel?: CardHeadingLevel
 }
 
 const MAX_TOPICS = 3
 
-export function ProjectCard({ repo }: ProjectCardProps) {
+export function ProjectCard({ repo, headingLevel: Heading = 'h3' }: ProjectCardProps) {
   return (
     <article className="group relative flex h-full flex-col gap-3 rounded-lg border border-line bg-surface p-5 transition-colors hover:border-ink/40">
-      <h3 className="break-words font-serif text-xl leading-snug">
+      <Heading className="break-words font-serif text-xl leading-snug">
         {/* O link cobre o card todo (::after), mas o nome continua sendo o texto acessível. */}
         <Link
           to={projectPath(repo.name)}
+          {...preloadOnIntent('projectDetail')}
           className="after:absolute after:inset-0 after:rounded-lg after:content-['']"
         >
           {repo.name}
         </Link>
-      </h3>
+      </Heading>
 
       <p className="line-clamp-3 flex-1 text-sm text-muted">
         {repo.description ?? 'Sem descrição.'}

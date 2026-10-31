@@ -14,7 +14,12 @@ export function RootLayout() {
         Pular para o conteúdo
       </a>
       <SiteHeader />
-      <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 py-12">
+      {/* min-h-dvh: o rodapé nasce abaixo da dobra e não "pula" quando a página carrega (CLS). */}
+      <main
+        id="conteudo"
+        tabIndex={-1}
+        className="mx-auto min-h-dvh w-full max-w-5xl flex-1 px-4 py-12"
+      >
         {/* Cada página é um chunk separado (React.lazy); o skeleton cobre o download. */}
         <Suspense fallback={<PageSkeleton />}>
           <Outlet />
