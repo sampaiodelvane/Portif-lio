@@ -78,6 +78,10 @@ describe('DashboardPage — destaques', () => {
     const names = (await within(showcase).findAllByRole('heading', { level: 3 })).map(
       (h) => h.textContent,
     )
-    expect(names).toEqual(['G&B Higienizações', 'Página de Vinhos', 'Novo TV Time'])
+    expect(names).toEqual([
+      'Gestão de Vendas e Serviços - Empresa de Monitoramento',
+      'G&B Higienizações',
+      'Página de Vinhos',
+    ])
   })
 })
