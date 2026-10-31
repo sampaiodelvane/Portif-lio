@@ -379,7 +379,7 @@ Tempo de fala de referência entre colchetes.
 ### Checklist de entrega
 
 - [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` (falta cadastrar na Vercel)
-- [ ] Completar descrição e funcionalidades de `escalasrede7` e `fiapconnect` em `src/content/projects.ts` (hoje `draft: true`)
+- [x] Descrição e funcionalidades dos 6 projetos da vitrine (`src/content/projects.ts`)
 - [ ] Deploy na Vercel e links preenchidos no topo deste README
 - [ ] Repositório no GitHub com o CI verde
 - [ ] (Opcional) Supabase e EmailJS configurados

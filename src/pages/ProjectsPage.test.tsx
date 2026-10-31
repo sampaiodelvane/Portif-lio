@@ -145,11 +145,13 @@ describe('ProjectDetailPage', () => {
     )
   })
 
-  it('texto provisório (draft) não exibe a seção de funcionalidades vazia', async () => {
-    renderRoute('/projetos/escalasrede7')
+  it('nome de exibição diferente do repositório: Escala Rede 7 em /projetos/escala-rede-7', async () => {
+    renderRoute('/projetos/escala-rede-7')
 
-    await screen.findByRole('heading', { level: 1, name: 'escalasrede7' })
-    expect(screen.queryByRole('region', { name: 'Funcionalidades' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Escala Rede 7' })).toBeVisible()
+    const features = screen.getByRole('region', { name: 'Funcionalidades' })
+    expect(within(features).getByText(/Senior 00800/)).toBeInTheDocument()
+    expect(screen.getByText(/Código-fonte privado/)).toBeInTheDocument()
   })
 
   it('slug inexistente mostra "projeto não encontrado"', async () => {
