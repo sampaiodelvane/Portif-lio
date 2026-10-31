@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router'
+import { RecentProjects } from '@/components/projects/RecentProjects'
 import { ROUTE_PATHS } from '@/routes/route-paths'
 
 export default function HomePage() {
@@ -33,6 +34,7 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      <RecentProjects />
     </>
   )
 }
