@@ -78,6 +78,8 @@ O Biome valida nomes de arquivo (`useFilenamingConvention`) e default exports (`
   `rate-limit`/`not-found`, manter o cache por ETag de `github-client.ts`.
 - **Testes sem rede:** o setup bloqueia `fetch` e zera `VITE_*`. Use `mockFetch()` e
   `vi.stubEnv()`; renderize páginas com `renderRoute()` de `src/test/`.
+- **stale-if-error:** com cota esgotada ou sem rede, `github-client.ts` devolve a última
+  resposta salva (cache por ETag) em vez de erro. Só sem nada salvo a UI mostra o erro.
 - **Tema:** chave `portfolio-theme` no localStorage, usada também pelo script inline do
   `index.html` (evita flash). Se mudar a chave, mudar nos dois lugares.
 
@@ -94,9 +96,18 @@ Estilo **editorial e sóbrio**. O site não pode parecer "template de IA".
 
 ## Performance (meta: Lighthouse Mobile ≥ 80)
 
-- Toda página entra por `React.lazy` + `Suspense` com skeleton.
+Resultado atual: 97–100 (detalhes e método em `docs/performance.md`).
+
+- Toda página entra por `React.lazy` + `Suspense` com skeleton, registrada em
+  `routes/page-loaders.ts`. **Exceção:** a `HomePage` é estática porque contém o LCP.
+- Links para rotas lazy usam `preloadOnIntent(page)` (baixa o chunk no hover/foco/toque).
 - Bibliotecas pesadas (3D, gráficos, Supabase no dashboard) só via `import()` dinâmico.
+- Validação com `zod/mini` (API funcional, tree-shakeable). Não importar de `'zod'`.
+- Skeleton com o mesmo tamanho do conteúdo final; nada pode empurrar layout visível (CLS 0).
 - Imagens em WebP/AVIF, `loading="lazy"`, `width`/`height` definidos.
+- Mudou algo no caminho crítico? Rode `npm run build && npm run perf:bundle && npm run
+  perf:lighthouse` e compare com `docs/performance.md`. O Lighthouse local gasta cota da API do
+  GitHub (60 req/h): evite rodar em loop.
 
 ## Segurança e ambiente
 
