@@ -103,7 +103,16 @@ Estilo **editorial e sóbrio**. O site não pode parecer "template de IA".
 - **Nunca** criar, ler para o chat ou commitar `.env`, `.env.local` ou similares. Só `.env.example`
   (chaves sem valores) é versionado. O hook de pre-commit e o CI bloqueiam `.env` reais.
 - Variáveis `VITE_*` são públicas (vão para o bundle). Segredo de servidor nunca vai para o front.
-- Segurança do Supabase vem de RLS, não de esconder a anon key.
+- Segurança do Supabase vem de RLS, não de esconder a anon key. Toda tabela nova entra com
+  `enable row level security` e políticas explícitas em `supabase/migrations/`.
+- **Backend com duas implementações** (`services/backend/`): `supabase-*` quando
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` existem; senão `local-backend` (modo
+  demonstração em localStorage). Componentes e hooks só conhecem as interfaces de
+  `backend-types.ts` — nunca importam uma implementação diretamente.
+- Operações públicas (contato, destaques) usam REST com `fetch`; o `supabase-js` só é carregado
+  por import dinâmico em `/login` e `/admin`. Não importar `@supabase/supabase-js` fora de
+  `supabase-admin.ts`.
+- Redirecionamento pós-login passa sempre por `safeRedirectPath()` (bloqueia open redirect).
 
 ## Commits — Conventional Commits (validado pelo commitlint)
 
@@ -120,8 +129,9 @@ Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` (principais) e `perf`,
 
 - `main` é estável e sempre passa no CI (deploy de produção na Vercel).
 - Cada funcionalidade em branch semântica a partir da `main`:
-  `feature/routing-theme`, `feature/github-integration`, `feature/contact-form`,
-  `feature/dashboard-auth`, `chore/...`, `fix/...`, `docs/...`.
+  `feature/routing-theme`, `feature/github-integration`, `feature/contact-dashboard`
+  (formulário + painel, pois compartilham a camada de backend), `chore/...`, `fix/...`,
+  `docs/...`.
 - Merge na `main` só com lint, typecheck, testes e build verdes.
 
 ## Fluxo de trabalho do agente
