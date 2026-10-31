@@ -8,7 +8,7 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 |                       |                                                                                                 |
 | --------------------- | ----------------------------------------------------------------------------------------------- |
 | **Demo**              | `https://<seu-projeto>.vercel.app` _(preencher após o deploy)_                                  |
-| **Repositório**       | `https://github.com/<seu-usuario>/portfolio-cp3` _(preencher)_                                  |
+| **Repositório**       | [github.com/sampaiodelvane/Portif-lio](https://github.com/sampaiodelvane/Portif-lio)            |
 | **Lighthouse mobile** | Performance **97–100** · Acessibilidade **100** · SEO **100** ([detalhes](docs/performance.md)) |
 | **Testes**            | 71 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
 
@@ -381,6 +381,6 @@ Tempo de fala de referência entre colchetes.
 - [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` (falta cadastrar na Vercel)
 - [x] Descrição e funcionalidades dos 6 projetos da vitrine (`src/content/projects.ts`)
 - [ ] Deploy na Vercel e links preenchidos no topo deste README
-- [ ] Repositório no GitHub com o CI verde
+- [x] Repositório no GitHub com o CI verde
 - [ ] (Opcional) Supabase e EmailJS configurados
 - [ ] Vídeo gravado seguindo a seção 7
