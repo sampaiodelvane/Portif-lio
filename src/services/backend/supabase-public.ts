@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { BackendError } from '@/lib/backend-error'
 import type { SupabaseConfig } from '@/lib/env'
 import type { PublicBackend } from '@/services/backend/backend-types'

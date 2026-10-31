@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { githubFetch } from '@/services/github-client'
 import type { GithubRepo, LanguageShare, RepoLanguages } from '@/types/github'
 
@@ -6,18 +6,18 @@ import type { GithubRepo, LanguageShare, RepoLanguages } from '@/types/github'
 const repoSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable(),
+  description: z.nullable(z.string()),
   html_url: z.url(),
-  homepage: z.string().nullable().optional(),
-  language: z.string().nullable(),
-  topics: z.array(z.string()).optional().default([]),
+  homepage: z.optional(z.nullable(z.string())),
+  language: z.nullable(z.string()),
+  topics: z._default(z.array(z.string()), []),
   stargazers_count: z.number(),
   forks_count: z.number(),
   fork: z.boolean(),
   archived: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
-  pushed_at: z.string().nullable(),
+  pushed_at: z.nullable(z.string()),
 })
 
 type RepoDto = z.infer<typeof repoSchema>

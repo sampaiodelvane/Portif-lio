@@ -1,4 +1,4 @@
-import type { z } from 'zod'
+import type { ZodMiniType } from 'zod/mini'
 import { GithubApiError } from '@/lib/github-api-error'
 
 const GITHUB_API = 'https://api.github.com'
@@ -41,7 +41,7 @@ function isRateLimited(response: Response): boolean {
 
 export async function githubFetch<T>(
   path: string,
-  schema: z.ZodType<T>,
+  schema: ZodMiniType<T>,
   init: { signal?: AbortSignal } = {},
 ): Promise<T> {
   const url = `${GITHUB_API}${path}`

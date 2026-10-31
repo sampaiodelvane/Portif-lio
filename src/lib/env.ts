@@ -1,21 +1,26 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 
 // Único ponto do app que lê import.meta.env (regra do CLAUDE.md).
-// String vazia no .env conta como "não configurado".
-const optionalString = z
-  .string()
-  .trim()
-  .optional()
-  .transform((value) => (value ? value : undefined))
+// zod/mini: API funcional e tree-shakeable (bem menor que o zod completo no bundle).
+
+/** String vazia (ou só espaços) no .env conta como "não configurado". */
+const optionalString = z.pipe(
+  z.optional(z.string().check(z.trim())),
+  z.transform((value) => (value ? value : undefined)),
+)
+
+const githubUsername = z.pipe(
+  optionalString,
+  z.optional(
+    z.string().check(z.regex(/^[a-z\d](?:[a-z\d-]{0,38})$/i, 'Usuário do GitHub inválido')),
+  ),
+)
+
+const supabaseUrl = z.pipe(optionalString, z.optional(z.url()))
 
 const envSchema = z.object({
-  VITE_GITHUB_USERNAME: optionalString.pipe(
-    z
-      .string()
-      .regex(/^[a-z\d](?:[a-z\d-]{0,38})$/i, 'Usuário do GitHub inválido')
-      .optional(),
-  ),
-  VITE_SUPABASE_URL: optionalString.pipe(z.url().optional()),
+  VITE_GITHUB_USERNAME: githubUsername,
+  VITE_SUPABASE_URL: supabaseUrl,
   VITE_SUPABASE_ANON_KEY: optionalString,
   VITE_EMAILJS_SERVICE_ID: optionalString,
   VITE_EMAILJS_TEMPLATE_ID: optionalString,
