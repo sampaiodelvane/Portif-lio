@@ -136,12 +136,18 @@ describe('ProjectDetailPage', () => {
     expect(calledUrls.some((url) => url.includes('/languages'))).toBe(false)
   })
 
-  it('mostra o link publicado quando o projeto tem um', async () => {
-    renderRoute('/projetos/terravis')
+  it.each([
+    ['terravis', 'https://sampaiodelvane.github.io/TerraVis/'],
+    [
+      'pagina-de-vinhos',
+      'https://sampaiodelvane.github.io/Landing-Page---Tema-Livre-CHP-Front-End-Design-/',
+    ],
+  ])('mostra o link publicado de /projetos/%s', async (slug, liveUrl) => {
+    renderRoute(`/projetos/${slug}`)
 
     expect(await screen.findByRole('link', { name: /ver online/i })).toHaveAttribute(
       'href',
-      'https://sampaiodelvane.github.io/TerraVis/',
+      liveUrl,
     )
   })
 

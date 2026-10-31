@@ -38,6 +38,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     title: 'Página de Vinhos',
     context: 'FIAP · Front-End Design',
     visibility: 'public',
+    liveUrl: 'https://sampaiodelvane.github.io/Landing-Page---Tema-Livre-CHP-Front-End-Design-/',
     summary:
       'Landing page de vendas de vinhos com carrinho completo, criada com Vibecoding e com o processo de IA documentado.',
     description:
