@@ -17,7 +17,7 @@ describe('monitoramento de acessos — privacidade', () => {
 
   it('agrupa páginas de projeto numa rota só para os relatórios', () => {
     expect(toAnalyticsRoute('/projetos/terravis')).toBe('/projetos/[slug]')
-    expect(toAnalyticsRoute('/projetos/pagina-de-vinhos/')).toBe('/projetos/[slug]')
+    expect(toAnalyticsRoute('/projetos/adega-bordo/')).toBe('/projetos/[slug]')
     expect(toAnalyticsRoute('/projetos')).toBe('/projetos')
     expect(toAnalyticsRoute('/')).toBe('/')
   })

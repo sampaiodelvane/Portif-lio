@@ -16,9 +16,9 @@ describe('ProjectsPage — vitrine curada', () => {
     const fetchMock = mockFetch([])
     renderRoute('/projetos')
 
-    expect(await screen.findByRole('link', { name: 'Página de Vinhos' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Adega Bordô' })).toHaveAttribute(
       'href',
-      '/projetos/pagina-de-vinhos',
+      '/projetos/adega-bordo',
     )
     expect(screen.getByRole('link', { name: 'Novo TV Time' })).toHaveAttribute(
       'href',
@@ -61,7 +61,7 @@ describe('ProjectsPage — vitrine curada', () => {
     ])
     renderRoute('/projetos')
 
-    const vinhos = await cardFor('Página de Vinhos')
+    const vinhos = await cardFor('Adega Bordô')
     expect(await within(vinhos).findByText('Código aberto no GitHub')).toBeInTheDocument()
     expect(screen.getAllByRole('article')).toHaveLength(TOTAL)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -139,7 +139,7 @@ describe('ProjectDetailPage', () => {
   it.each([
     ['terravis', 'https://sampaiodelvane.github.io/TerraVis/'],
     [
-      'pagina-de-vinhos',
+      'adega-bordo',
       'https://sampaiodelvane.github.io/Landing-Page---Tema-Livre-CHP-Front-End-Design-/',
     ],
     ['gb-higienizacoes', 'https://gb-higienizacoes.vercel.app/'],

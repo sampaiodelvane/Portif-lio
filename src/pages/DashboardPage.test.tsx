@@ -51,7 +51,7 @@ describe('DashboardPage — destaques', () => {
     // Opções vêm do catálogo (com os nomes de exibição), inclusive projetos privados.
     await user.click(await screen.findByRole('checkbox', { name: /TerraVis/ }))
     await user.click(screen.getByRole('checkbox', { name: /G&B Higienizações/ }))
-    await user.click(screen.getByRole('checkbox', { name: /Página de Vinhos/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Adega Bordô/ }))
     expect(screen.getByRole('checkbox', { name: /Novo TV Time/ })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Salvar destaques' }))
@@ -59,7 +59,7 @@ describe('DashboardPage — destaques', () => {
     expect(readStored<FeaturedProject[]>(DEMO_KEYS.featured)).toEqual([
       { slug: 'terravis', position: 0 },
       { slug: 'gb-higienizacoes', position: 1 },
-      { slug: 'pagina-de-vinhos', position: 2 },
+      { slug: 'adega-bordo', position: 2 },
     ])
 
     await router.navigate('/')
@@ -68,7 +68,7 @@ describe('DashboardPage — destaques', () => {
     const names = within(showcase)
       .getAllByRole('heading', { level: 3 })
       .map((h) => h.textContent)
-    expect(names).toEqual(['TerraVis', 'G&B Higienizações', 'Página de Vinhos'])
+    expect(names).toEqual(['TerraVis', 'G&B Higienizações', 'Adega Bordô'])
   })
 
   it('sem destaques salvos, a home mostra os três primeiros do catálogo', async () => {
@@ -81,7 +81,7 @@ describe('DashboardPage — destaques', () => {
     expect(names).toEqual([
       'Gestão de Vendas e Serviços - Empresa de Monitoramento',
       'G&B Higienizações',
-      'Página de Vinhos',
+      'Adega Bordô',
     ])
   })
 })
