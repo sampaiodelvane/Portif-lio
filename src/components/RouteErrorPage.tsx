@@ -1,6 +1,7 @@
 import { RotateCw } from 'lucide-react'
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
 import { NotFoundContent } from '@/components/NotFoundContent'
+import { isDevelopment } from '@/lib/build-mode'
 import { getErrorMessage, isChunkLoadError } from '@/lib/errors'
 import { ROUTE_PATHS } from '@/routes/route-paths'
 
@@ -27,7 +28,7 @@ export function RouteErrorPage() {
       <p className="font-mono text-sm text-accent">Erro</p>
       <h1 className="font-serif text-4xl sm:text-5xl">{title}</h1>
       <p className="max-w-prose text-lg text-muted">{description}</p>
-      {import.meta.env.DEV && (
+      {isDevelopment && (
         <pre className="max-w-full overflow-x-auto rounded-md border border-line bg-surface p-4 font-mono text-sm">
           {getErrorMessage(error)}
         </pre>

@@ -46,6 +46,9 @@ src/
 - `services/` nunca importa React.
 - Variáveis de ambiente são lidas **apenas** em `src/lib/env.ts` (validadas com Zod), nunca com
   `import.meta.env` espalhado pelo código.
+- Flags de build (`PROD`, `DEV`, modo teste) ficam em `src/lib/build-mode.ts`, módulo **sem
+  dependências**: o layout o importa, e ler essas flags de `env.ts` levaria o Zod para o bundle
+  inicial (+8 kB gzip — já aconteceu, detectado pelo `perf:bundle`).
 
 ## Nomenclatura
 

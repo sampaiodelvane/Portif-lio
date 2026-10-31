@@ -1,4 +1,5 @@
 import { BackendError, DEMO_CREDENTIALS } from '@/lib/backend-error'
+import { isTest } from '@/lib/build-mode'
 import type { AdminBackend, PublicBackend } from '@/services/backend/backend-types'
 import type { AuthUser } from '@/types/auth'
 import type { ContactMessage, FeaturedProject } from '@/types/contact'
@@ -41,7 +42,7 @@ function write(key: string, value: unknown): void {
 }
 
 // Latência simulada para os estados de loading aparecerem na demo (zero nos testes).
-const LATENCY_MS = import.meta.env.MODE === 'test' ? 0 : 350
+const LATENCY_MS = isTest ? 0 : 350
 const delay = () => new Promise((resolve) => setTimeout(resolve, LATENCY_MS))
 
 function currentSession(): StoredSession | null {
