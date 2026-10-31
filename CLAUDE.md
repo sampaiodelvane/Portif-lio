@@ -35,7 +35,8 @@ src/
   services/     Acesso a APIs externas (GitHub, Supabase, EmailJS). Funções puras e tipadas, sem React.
   hooks/        Hooks que ligam services ao React (useQuery/useMutation) e lógica de UI reutilizável.
   context/      Providers globais (tema, auth). Pouco estado aqui; dados remotos ficam no TanStack Query.
-  types/        Tipos de domínio compartilhados (Repo, ContactMessage...).
+  content/      Conteúdo editorial (catálogo curado de projetos). Dados estáticos, sem lógica.
+  types/        Tipos de domínio compartilhados (PortfolioProject, ContactMessage...).
   lib/          Utilitários genéricos (cn, formatadores, env tipado, queryClient).
   test/         Setup e utilitários de teste.
 ```
@@ -70,6 +71,12 @@ O Biome valida nomes de arquivo (`useFilenamingConvention`) e default exports (`
   `hooks/` (ex.: `useTheme`), que lança erro se usado fora do Provider.
 - **Erros:** `RouteErrorPage` é o `errorElement` e **não** pode ser lazy (precisa funcionar
   quando um chunk falha). Rotas desconhecidas caem no `path: '*'` (404 dentro do layout).
+- **Vitrine de projetos:** a fonte é `src/content/projects.ts` (curadoria manual; a ordem do
+  array é a ordem de exibição). A API do GitHub só _complementa_ projetos `visibility: 'public'`
+  (data, linguagens, link) via `mergeWithGithub`; privados nunca são consultados. Para incluir um
+  projeto: adicionar ao catálogo com `slug` kebab-case único, `title`, `context`, `summary`
+  (≤ 160 caracteres), `description`, ≥ 3 `features` e `stack`. Texto não revisado pelo autor
+  leva `draft: true`. O teste `content/projects.test.ts` valida essas regras.
 - **Dados remotos:** componente nunca chama `fetch`. Fluxo: `services/*` (fetch + validação Zod +
   mapeamento para tipos de domínio) → `hooks/use*` (TanStack Query, chaves em
   `hooks/github-query-keys.ts`) → componentes. Erros da API são `GithubApiError` com `kind`;

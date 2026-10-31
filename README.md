@@ -10,7 +10,7 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 | **Demo**              | `https://<seu-projeto>.vercel.app` _(preencher após o deploy)_                                  |
 | **Repositório**       | `https://github.com/<seu-usuario>/portfolio-cp3` _(preencher)_                                  |
 | **Lighthouse mobile** | Performance **97–100** · Acessibilidade **100** · SEO **100** ([detalhes](docs/performance.md)) |
-| **Testes**            | 61 testes (Vitest + Testing Library) · cobertura de 85% das instruções                          |
+| **Testes**            | 71 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
 
 ---
 
@@ -69,10 +69,13 @@ acessa, então cada visitante só vê o próprio navegador.
 
 ## 2. Funcionalidades
 
-- **Projetos do GitHub** — lista com busca (sem acento/maiúscula) e filtro por linguagem
-  guardados na URL (`?q=&lang=`), skeletons sem salto de layout, estados de vazio/erro/limite
-  de API, página de detalhe em URL canônica `/projetos/:repoName` com linguagens e tópicos.
-- **Vitrine na home** — até 3 projetos escolhidos no painel; sem escolha, os mais recentes.
+- **Vitrine curada de projetos** — 6 projetos selecionados (públicos e privados) com nome de
+  exibição, contexto, descrição, funcionalidades e tecnologias escritos à mão em
+  [`src/content/projects.ts`](src/content/projects.ts). Nos públicos, a API do GitHub
+  complementa com data do último push, porcentagem de linguagens e link do código. Busca (sem
+  acento/maiúscula) e filtro por tecnologia guardados na URL (`?q=&tech=`); detalhe em URL
+  canônica e legível, como `/projetos/pagina-de-vinhos`.
+- **Vitrine na home** — até 3 projetos escolhidos no painel; sem escolha, os 3 primeiros do catálogo.
 - **Contato** — React Hook Form + Zod, erros acessíveis por campo, botão bloqueado durante o
   envio, honeypot anti-bot; envia e-mail (EmailJS) e grava cópia no painel em paralelo.
 - **Painel protegido** (`/admin`) — login, redirecionamento de volta à URL pedida, mensagens
@@ -95,7 +98,7 @@ src/
   components/  UI reutilizável. Nunca chama fetch nem importa services/.
     ui/          Primitivos: Skeleton, FormField, StatusMessage.
     layout/      RootLayout, SiteHeader, SiteFooter.
-    projects/    Cards, grid, filtros, mensagens de erro do GitHub.
+    projects/    Cards, grid, filtros, linguagens do repositório.
     contact/     ContactForm.
     dashboard/   MessagesPanel, FeaturedPanel.
   hooks/       Ligam services ao React (TanStack Query) e lógica de UI reutilizável.
@@ -104,7 +107,8 @@ src/
   context/     Providers globais (tema, auth). Contexto em *-context.ts, Provider em *Provider.tsx.
   routes/      Árvore de rotas, guarda (ProtectedRoute), loaders lazy e caminhos.
   lib/         Utilitários: env tipado, QueryClient, schemas Zod, formatação, erros tipados.
-  types/       Tipos de domínio (GithubRepo, ContactMessage, AuthUser…).
+  content/     Conteúdo editorial: catálogo curado de projetos (com teste de integridade).
+  types/       Tipos de domínio (PortfolioProject, GithubRepo, ContactMessage, AuthUser…).
   test/        Setup e utilitários de teste (renderRoute, mockFetch, fixtures).
 supabase/migrations/   Esquema SQL com Row Level Security.
 scripts/               Guarda de .env, relatório de bundle, Lighthouse.
@@ -123,6 +127,7 @@ flowchart LR
     P --> H[hooks]
     C --> H
   end
+  H -- "catálogo local" --> CT[(content/projects.ts<br/>curadoria)]
   H -- "useQuery / useMutation" --> Q[(TanStack Query<br/>cache em memória)]
   Q --> S[services]
   S -- "fetch + Zod + ETag" --> GH[(API do GitHub)]
@@ -140,18 +145,22 @@ flowchart LR
    (`html_url` → `url`, `stargazers_count` → `stars`). Se a API mudar, quebra num lugar só.
 4. O backend é escolhido em tempo de execução pela presença das variáveis do Supabase.
    Componentes só conhecem as interfaces `PublicBackend` / `AdminBackend`.
+5. A vitrine (`usePortfolioProjects`) parte do **catálogo local** e apenas _complementa_ os
+   projetos públicos com dados da API (`mergeWithGithub`). A lista aparece na hora e continua
+   completa se a API falhar ou a cota acabar — só somem data e linguagens. Repositórios
+   privados nunca são consultados (a API pública nem os enxerga).
 
 ### Economia da cota do GitHub (60 req/h por IP, sem token)
 
 Token não pode ir para o front-end, então a API é usada sem autenticação. Quatro camadas
 evitam esgotar a cota:
 
-| Camada           | Mecanismo                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------- |
-| Memória          | `staleTime` de 10 min: navegar entre páginas não refaz a requisição                                |
-| Navegador        | Cache por **ETag** no localStorage: ao recarregar, o GitHub responde **304**, que não consome cota |
-| Reaproveitamento | O detalhe do projeto usa o card que já está no cache da lista (`initialData`)                      |
-| Resiliência      | **stale-if-error**: com a cota esgotada ou sem rede, mostra a última versão salva                  |
+| Camada         | Mecanismo                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| Memória        | `staleTime` de 10 min: navegar entre páginas não refaz a requisição                                |
+| Navegador      | Cache por **ETag** no localStorage: ao recarregar, o GitHub responde **304**, que não consome cota |
+| Uma chamada só | Lista, detalhe e home usam a mesma consulta `/users/:user/repos`; o detalhe só busca as linguagens |
+| Resiliência    | **stale-if-error**: com a cota esgotada ou sem rede, mostra a última versão salva                  |
 
 Rate limit e 404 não têm retry (repetir só gastaria cota). A UI mostra o horário em que a
 cota volta.
@@ -170,40 +179,41 @@ cota volta.
 
 ## 4. Decisões de engenharia e trade-offs
 
-| Decisão           | Opções avaliadas                                      | Critério decisivo                                           | Escolha                                          | O que foi preterido e por quê                                                                                                                 |
-| ----------------- | ----------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build / framework | Vite, Next.js, CRA                                    | Portfólio estático sem necessidade de SSR; deploy simples   | **Vite 8** (Rolldown)                            | Next.js: SSR/servidor sem benefício aqui e mais complexidade de deploy. CRA: descontinuado.                                                   |
-| Roteamento        | React Router v6, **v8**, TanStack Router              | API estável e conhecida, data router com `errorElement`     | **React Router v8**                              | O briefing citava v6, mas a v8 é a atual com a mesma API de SPA. TanStack Router: tipagem melhor, porém curva maior para o escopo.            |
-| Dados remotos     | `useEffect` + `fetch`, SWR, RTK Query, TanStack Query | Cache, deduplicação, retry configurável, mutações otimistas | **TanStack Query v5**                            | `useEffect`: reimplementar cache e corridas. RTK Query: exige Redux. SWR: mutações menos completas.                                           |
-| Estado global     | Redux, Zustand, Context                               | Pouco estado de cliente (tema, sessão)                      | **Context API**                                  | Redux/Zustand: dependência para dois valores; dado remoto já está no Query.                                                                   |
-| Estilo            | Tailwind v4, CSS Modules, styled-components           | Velocidade, tokens de tema, zero runtime                    | **Tailwind CSS v4**                              | styled-components: custo de runtime. CSS Modules: tokens e variantes de dark mode mais trabalhosos.                                           |
-| Validação         | Zod, **zod/mini**, Yup, Valibot                       | Um schema para form, env e API; tamanho                     | **zod/mini**                                     | Zod completo: 24,5 kB gzip contra 7,4 kB (API encadeada impede tree-shaking). Valibot: menor ainda, mas menos integrado ao ecossistema.       |
-| Formulário        | Controlado, Formik, React Hook Form                   | Re-renders, integração com schema                           | **React Hook Form**                              | Formik: campos controlados (mais re-renders) e manutenção menos ativa. Controlado: rerender por tecla.                                        |
-| Backend           | Supabase, Firebase, só mock                           | Postgres + RLS declarativo; funcionar sem conta             | **Supabase + modo demo** (adapter)               | Firebase: regras menos expressivas que SQL. Só mock: não serviria para produção. O adapter permite rodar e testar sem conta.                  |
-| Auth no modo demo | Mock JWT "criptografado", sessão simples              | Honestidade sobre segurança                                 | **Sessão simples com expiração**                 | Criptografar no front é teatro: a chave estaria no bundle. Segurança real fica no Supabase (RLS).                                             |
-| Supabase no front | `supabase-js` em tudo, REST com `fetch`               | Peso nas páginas públicas                                   | **REST nas públicas, supabase-js lazy no admin** | `supabase-js` em tudo: +54 kB gzip para todo visitante.                                                                                       |
-| E-mail            | EmailJS, Formspree, função serverless                 | Sem backend próprio, sem SDK                                | **EmailJS via REST**                             | Formspree: alternativa equivalente; EmailJS permite template de e-mail próprio sem backend. SDK do EmailJS: desnecessário para um único POST. |
-| Lint / format     | ESLint + Prettier, **Biome**                          | Velocidade, uma configuração                                | **Biome 2**                                      | ESLint + Prettier: 2 ferramentas e mais plugins; Biome cobre a11y, hooks e nomes de arquivo.                                                  |
-| Testes            | Jest, Vitest                                          | Mesma config do Vite, ESM nativo                            | **Vitest**                                       | Jest: configuração extra para ESM/TS e aliases.                                                                                               |
-| Página inicial    | Lazy como as outras, estática                         | LCP no celular                                              | **Estática** (vitrine lazy)                      | Lazy: +1 ida e volta antes do LCP. Custo: +3,6 kB no bundle inicial; ganho: LCP 2,51 s → 1,24 s.                                              |
-| Fontes            | Google Fonts, fontes do sistema                       | Zero download, zero FOUT/CLS                                | **Fontes do sistema**                            | Web fonts: requisição extra e risco de CLS; a pilha serifada do sistema atende ao visual editorial.                                           |
-| Elemento 3D       | Three.js / R3F / Spline, nenhum                       | Custo × benefício para um portfólio de código               | **Não incluído**                                 | Bundle de centenas de kB para efeito decorativo; contraria a direção visual sóbria.                                                           |
+| Decisão           | Opções avaliadas                                         | Critério decisivo                                                                               | Escolha                                          | O que foi preterido e por quê                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Build / framework | Vite, Next.js, CRA                                       | Portfólio estático sem necessidade de SSR; deploy simples                                       | **Vite 8** (Rolldown)                            | Next.js: SSR/servidor sem benefício aqui e mais complexidade de deploy. CRA: descontinuado.                                                                                          |
+| Roteamento        | React Router v6, **v8**, TanStack Router                 | API estável e conhecida, data router com `errorElement`                                         | **React Router v8**                              | O briefing citava v6, mas a v8 é a atual com a mesma API de SPA. TanStack Router: tipagem melhor, porém curva maior para o escopo.                                                   |
+| Dados remotos     | `useEffect` + `fetch`, SWR, RTK Query, TanStack Query    | Cache, deduplicação, retry configurável, mutações otimistas                                     | **TanStack Query v5**                            | `useEffect`: reimplementar cache e corridas. RTK Query: exige Redux. SWR: mutações menos completas.                                                                                  |
+| Estado global     | Redux, Zustand, Context                                  | Pouco estado de cliente (tema, sessão)                                                          | **Context API**                                  | Redux/Zustand: dependência para dois valores; dado remoto já está no Query.                                                                                                          |
+| Estilo            | Tailwind v4, CSS Modules, styled-components              | Velocidade, tokens de tema, zero runtime                                                        | **Tailwind CSS v4**                              | styled-components: custo de runtime. CSS Modules: tokens e variantes de dark mode mais trabalhosos.                                                                                  |
+| Validação         | Zod, **zod/mini**, Yup, Valibot                          | Um schema para form, env e API; tamanho                                                         | **zod/mini**                                     | Zod completo: 24,5 kB gzip contra 7,4 kB (API encadeada impede tree-shaking). Valibot: menor ainda, mas menos integrado ao ecossistema.                                              |
+| Formulário        | Controlado, Formik, React Hook Form                      | Re-renders, integração com schema                                                               | **React Hook Form**                              | Formik: campos controlados (mais re-renders) e manutenção menos ativa. Controlado: rerender por tecla.                                                                               |
+| Backend           | Supabase, Firebase, só mock                              | Postgres + RLS declarativo; funcionar sem conta                                                 | **Supabase + modo demo** (adapter)               | Firebase: regras menos expressivas que SQL. Só mock: não serviria para produção. O adapter permite rodar e testar sem conta.                                                         |
+| Auth no modo demo | Mock JWT "criptografado", sessão simples                 | Honestidade sobre segurança                                                                     | **Sessão simples com expiração**                 | Criptografar no front é teatro: a chave estaria no bundle. Segurança real fica no Supabase (RLS).                                                                                    |
+| Supabase no front | `supabase-js` em tudo, REST com `fetch`                  | Peso nas páginas públicas                                                                       | **REST nas públicas, supabase-js lazy no admin** | `supabase-js` em tudo: +54 kB gzip para todo visitante.                                                                                                                              |
+| E-mail            | EmailJS, Formspree, função serverless                    | Sem backend próprio, sem SDK                                                                    | **EmailJS via REST**                             | Formspree: alternativa equivalente; EmailJS permite template de e-mail próprio sem backend. SDK do EmailJS: desnecessário para um único POST.                                        |
+| Lint / format     | ESLint + Prettier, **Biome**                             | Velocidade, uma configuração                                                                    | **Biome 2**                                      | ESLint + Prettier: 2 ferramentas e mais plugins; Biome cobre a11y, hooks e nomes de arquivo.                                                                                         |
+| Testes            | Jest, Vitest                                             | Mesma config do Vite, ESM nativo                                                                | **Vitest**                                       | Jest: configuração extra para ESM/TS e aliases.                                                                                                                                      |
+| Fonte da vitrine  | Lista automática da API, catálogo curado, catálogo + API | Repositórios privados não aparecem na API; nomes de repo ruins de exibir; independência da cota | **Catálogo curado + API como complemento**       | Só API: perderia os privados e exibiria nomes como `Landing-Page---Tema-Livre-…`. Só catálogo: perderia datas e linguagens atualizadas. Custo: editar um arquivo ao incluir projeto. |
+| Página inicial    | Lazy como as outras, estática                            | LCP no celular                                                                                  | **Estática** (vitrine lazy)                      | Lazy: +1 ida e volta antes do LCP. Custo: +3,6 kB no bundle inicial; ganho: LCP 2,51 s → 1,24 s.                                                                                     |
+| Fontes            | Google Fonts, fontes do sistema                          | Zero download, zero FOUT/CLS                                                                    | **Fontes do sistema**                            | Web fonts: requisição extra e risco de CLS; a pilha serifada do sistema atende ao visual editorial.                                                                                  |
+| Elemento 3D       | Three.js / R3F / Spline, nenhum                          | Custo × benefício para um portfólio de código                                                   | **Não incluído**                                 | Bundle de centenas de kB para efeito decorativo; contraria a direção visual sóbria.                                                                                                  |
 
 ---
 
 ## 5. Qualidade: testes, lint e CI
 
-**61 testes**, cobertura de **85% das instruções / 86% das linhas**. Nenhum teste acessa a
+**71 testes**, cobertura de **86% das instruções / 87% das linhas**. Nenhum teste acessa a
 rede: o setup bloqueia `fetch` e zera as variáveis `VITE_*`; cada teste declara o que precisa
 com `mockFetch()` e `vi.stubEnv()`.
 
-| Área                  | O que é coberto                                                                                                                                                                                 |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Formulário de contato | Erros por campo, foco no primeiro inválido, `aria-describedby`, limite de caracteres, botão bloqueado durante envio, clique duplo grava uma vez, EmailJS, falha total mantém os dados, honeypot |
-| Guarda de rotas       | Sem sessão → `/login`; sessão expirada; volta à URL pedida após login; credencial errada; logado em `/login` → `/admin`; logout bloqueia de novo; open redirect                                 |
-| Painel                | Filtro de não lidas, marcar como lida, excluir com confirmação, limite de 3 destaques e reflexo na home                                                                                         |
-| GitHub                | Mapeamento, rate limit com horário, 404, resposta fora do contrato, ETag/304, stale-if-error, filtros                                                                                           |
-| Tema e rotas          | Persistência, preferência do sistema, 404 no layout, erro de chunk, preload por intenção                                                                                                        |
+| Área                  | O que é coberto                                                                                                                                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Formulário de contato | Erros por campo, foco no primeiro inválido, `aria-describedby`, limite de caracteres, botão bloqueado durante envio, clique duplo grava uma vez, EmailJS, falha total mantém os dados, honeypot                             |
+| Guarda de rotas       | Sem sessão → `/login`; sessão expirada; volta à URL pedida após login; credencial errada; logado em `/login` → `/admin`; logout bloqueia de novo; open redirect                                                             |
+| Painel                | Filtro de não lidas, marcar como lida, excluir com confirmação, limite de 3 destaques e reflexo na home                                                                                                                     |
+| Vitrine e GitHub      | Catálogo íntegro (slugs, textos, links), lista sem API, privados nunca consultados, cota esgotada sem erro, busca e filtro por tecnologia, detalhe público/privado; mapeamento da API, rate limit, ETag/304, stale-if-error |
+| Tema e rotas          | Persistência, preferência do sistema, 404 no layout, erro de chunk, preload por intenção                                                                                                                                    |
 
 **Barreiras automáticas**
 
@@ -305,7 +315,7 @@ Tempo de fala de referência entre colchetes.
 
 | Tempo | Tela                                         | Fala (resumo)                                                                                                    |
 | ----- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 0:20  | Home → Projetos → busca "react" → detalhe    | Tour rápido: lista vinda da API do GitHub, filtros na URL, página canônica `/projetos/:repoName`.                |
+| 0:20  | Home → Projetos → busca "react" → detalhe    | Tour: vitrine curada (públicos e privados), filtros na URL, detalhe em `/projetos/pagina-de-vinhos`.             |
 | 0:50  | Alternar tema; recarregar                    | Tema persistido e aplicado antes da pintura, sem flash.                                                          |
 | 1:05  | Contato: enviar vazio, depois preencher      | Validação acessível com RHF + Zod; botão bloqueia durante o envio.                                               |
 | 1:25  | `/admin` → redireciona → login demo → painel | Rota protegida, volta à URL pedida; marcar como lida; escolher destaque e ver na home.                           |
@@ -368,7 +378,8 @@ Tempo de fala de referência entre colchetes.
 
 ### Checklist de entrega
 
-- [ ] `VITE_GITHUB_USERNAME` com o seu usuário (localmente e na Vercel)
+- [x] `VITE_GITHUB_USERNAME=sampaiodelvane` no `.env.local` (falta cadastrar na Vercel)
+- [ ] Completar descrição e funcionalidades de `escalasrede7` e `fiapconnect` em `src/content/projects.ts` (hoje `draft: true`)
 - [ ] Deploy na Vercel e links preenchidos no topo deste README
 - [ ] Repositório no GitHub com o CI verde
 - [ ] (Opcional) Supabase e EmailJS configurados
