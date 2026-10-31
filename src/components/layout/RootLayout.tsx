@@ -1,8 +1,14 @@
-import { Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { PageSkeleton } from '@/components/PageSkeleton'
+import { isProduction } from '@/lib/build-mode'
+
+// Monitoramento só em produção e fora do bundle inicial (chunk próprio, baixado após a página).
+const SiteAnalytics = lazy(() =>
+  import('@/components/layout/SiteAnalytics').then((m) => ({ default: m.SiteAnalytics })),
+)
 
 export function RootLayout() {
   return (
@@ -27,6 +33,11 @@ export function RootLayout() {
       </main>
       <SiteFooter />
       <ScrollRestoration />
+      {isProduction && (
+        <Suspense fallback={null}>
+          <SiteAnalytics />
+        </Suspense>
+      )}
     </div>
   )
 }
