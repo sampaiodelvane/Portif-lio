@@ -16,6 +16,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     title: 'G&B Higienizações',
     context: 'Projeto real para cliente',
     visibility: 'private',
+    liveUrl: 'https://gb-higienizacoes.vercel.app/',
     summary:
       'Landing page, catálogo de orçamentos com envio para o WhatsApp e painel administrativo para uma empresa de higienização.',
     description:
