@@ -32,7 +32,7 @@ src/
   components/   UI reutilizável, sem acesso direto a API. Subpasta ui/ para primitivos.
   pages/        Uma pasta/arquivo por rota. Compõe componentes + hooks. Única camada com default export (exigido pelo React.lazy).
   routes/       Árvore de rotas, guards (ProtectedRoute), lazy imports.
-  services/     Acesso a APIs externas (GitHub, Supabase, EmailJS). Funções puras e tipadas, sem React.
+  services/     Acesso a APIs externas (GitHub, Supabase, FormSubmit). Funções puras e tipadas, sem React.
   hooks/        Hooks que ligam services ao React (useQuery/useMutation) e lógica de UI reutilizável.
   context/      Providers globais (tema, auth). Pouco estado aqui; dados remotos ficam no TanStack Query.
   content/      Conteúdo editorial (catálogo curado de projetos). Dados estáticos, sem lógica.

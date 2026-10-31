@@ -10,7 +10,7 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 | **Demo**              | [delvane-portfolio.vercel.app](https://delvane-portfolio.vercel.app)                            |
 | **Repositório**       | [github.com/sampaiodelvane/Portif-lio](https://github.com/sampaiodelvane/Portif-lio)            |
 | **Lighthouse mobile** | Performance **97–100** · Acessibilidade **100** · SEO **100** ([detalhes](docs/performance.md)) |
-| **Testes**            | 79 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
+| **Testes**            | 80 testes (Vitest + Testing Library) · cobertura de 86% das instruções                          |
 
 ---
 
@@ -55,11 +55,10 @@ Todas são **públicas** (prefixo `VITE_`, embutidas no bundle). Nenhum segredo 
 para o front-end. O `.env` real **nunca** é versionado: o `.gitignore` o ignora, um hook de
 pre-commit bloqueia `git add -f` e o CI falha se algum `.env` aparecer no repositório.
 
-| Variável                                                   | Obrigatória | Sem ela…                                          |
-| ---------------------------------------------------------- | ----------- | ------------------------------------------------- |
-| `VITE_GITHUB_USERNAME`                                     | Sim         | Páginas de projetos mostram aviso de configuração |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`             | Não         | App usa o **modo demonstração** (localStorage)    |
-| `VITE_EMAILJS_SERVICE_ID` / `_TEMPLATE_ID` / `_PUBLIC_KEY` | Não         | Mensagem é só gravada no painel, sem e-mail       |
+| Variável                                       | Obrigatória | Sem ela…                                          |
+| ---------------------------------------------- | ----------- | ------------------------------------------------- |
+| `VITE_GITHUB_USERNAME`                         | Sim         | Páginas de projetos mostram aviso de configuração |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Não         | App usa o **modo demonstração** (localStorage)    |
 
 **Modo demonstração:** sem Supabase, o login do painel é `demo@portfolio.local` / `demo1234`
 (exibido na própria tela). É seguro por construção: os dados ficam no `localStorage` de quem
@@ -78,7 +77,7 @@ acessa, então cada visitante só vê o próprio navegador.
   publicado e de uma demonstração pública com dados fictícios (que ganha o destaque).
 - **Vitrine na home** — até 3 projetos escolhidos no painel; sem escolha, os 3 primeiros do catálogo.
 - **Contato** — React Hook Form + Zod, erros acessíveis por campo, botão bloqueado durante o
-  envio, honeypot anti-bot; envia e-mail (EmailJS) e grava cópia no painel em paralelo.
+  envio, honeypot anti-bot; envia e-mail (FormSubmit) e grava cópia no painel em paralelo.
 - **Painel protegido** (`/admin`) — login, redirecionamento de volta à URL pedida, mensagens
   com filtro de não lidas, marcar lida/não lida e excluir com confirmação (atualização
   otimista com rollback), seleção de projetos em destaque.
@@ -132,7 +131,7 @@ flowchart LR
   H -- "useQuery / useMutation" --> Q[(TanStack Query<br/>cache em memória)]
   Q --> S[services]
   S -- "fetch + Zod + ETag" --> GH[(API do GitHub)]
-  S --> E[(EmailJS)]
+  S --> E[(FormSubmit)]
   S --> B{backend/index.ts}
   B -- "sem VITE_SUPABASE_*" --> L[(localStorage<br/>modo demo)]
   B -- "público: REST + fetch" --> SR[(Supabase PostgREST)]
@@ -192,7 +191,7 @@ cota volta.
 | Backend           | Supabase, Firebase, só mock                              | Postgres + RLS declarativo; funcionar sem conta                                                 | **Supabase + modo demo** (adapter)               | Firebase: regras menos expressivas que SQL. Só mock: não serviria para produção. O adapter permite rodar e testar sem conta.                                                         |
 | Auth no modo demo | Mock JWT "criptografado", sessão simples                 | Honestidade sobre segurança                                                                     | **Sessão simples com expiração**                 | Criptografar no front é teatro: a chave estaria no bundle. Segurança real fica no Supabase (RLS).                                                                                    |
 | Supabase no front | `supabase-js` em tudo, REST com `fetch`                  | Peso nas páginas públicas                                                                       | **REST nas públicas, supabase-js lazy no admin** | `supabase-js` em tudo: +54 kB gzip para todo visitante.                                                                                                                              |
-| E-mail            | EmailJS, Formspree, função serverless                    | Sem backend próprio, sem SDK                                                                    | **EmailJS via REST**                             | Formspree: alternativa equivalente; EmailJS permite template de e-mail próprio sem backend. SDK do EmailJS: desnecessário para um único POST.                                        |
+| E-mail            | EmailJS, Formspree, FormSubmit, função serverless        | Sem backend próprio, sem SDK, **sem conta nem chave**                                           | **FormSubmit via `fetch`**                       | EmailJS (1ª escolha): exige conta, template e 3 chaves no deploy. FormSubmit só pede um clique de ativação; o endereço fica no bundle (pode virar código aleatório).                 |
 | Lint / format     | ESLint + Prettier, **Biome**                             | Velocidade, uma configuração                                                                    | **Biome 2**                                      | ESLint + Prettier: 2 ferramentas e mais plugins; Biome cobre a11y, hooks e nomes de arquivo.                                                                                         |
 | Testes            | Jest, Vitest                                             | Mesma config do Vite, ESM nativo                                                                | **Vitest**                                       | Jest: configuração extra para ESM/TS e aliases.                                                                                                                                      |
 | Fonte da vitrine  | Lista automática da API, catálogo curado, catálogo + API | Repositórios privados não aparecem na API; nomes de repo ruins de exibir; independência da cota | **Catálogo curado + API como complemento**       | Só API: perderia os privados e exibiria nomes como `Landing-Page---Tema-Livre-…`. Só catálogo: perderia datas e linguagens atualizadas. Custo: editar um arquivo ao incluir projeto. |
@@ -210,7 +209,7 @@ com `mockFetch()` e `vi.stubEnv()`.
 
 | Área                  | O que é coberto                                                                                                                                                                                                             |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Formulário de contato | Erros por campo, foco no primeiro inválido, `aria-describedby`, limite de caracteres, botão bloqueado durante envio, clique duplo grava uma vez, EmailJS, falha total mantém os dados, honeypot                             |
+| Formulário de contato | Erros por campo, foco no primeiro inválido, `aria-describedby`, limite de caracteres, botão bloqueado durante envio, clique duplo grava uma vez, FormSubmit (inclusive não ativado), falha total mantém os dados, honeypot  |
 | Guarda de rotas       | Sem sessão → `/login`; sessão expirada; volta à URL pedida após login; credencial errada; logado em `/login` → `/admin`; logout bloqueia de novo; open redirect                                                             |
 | Painel                | Filtro de não lidas, marcar como lida, excluir com confirmação, limite de 3 destaques e reflexo na home                                                                                                                     |
 | Vitrine e GitHub      | Catálogo íntegro (slugs, textos, links), lista sem API, privados nunca consultados, cota esgotada sem erro, busca e filtro por tecnologia, detalhe público/privado; mapeamento da API, rate limit, ETag/304, stale-if-error |
@@ -294,8 +293,8 @@ automático**, porque uma instrução em texto pode ser esquecida, mas um hook n
 
 - A regra de camadas é verificada pelo agente, não por ferramenta. Próximo passo:
   `dependency-cruiser` ou regra `noRestrictedImports` no CI.
-- O caminho com **Supabase real** e o envio pelo **EmailJS** estão implementados e cobertos com
-  respostas simuladas, mas dependem de criar as contas para teste ponta a ponta.
+- O caminho com **Supabase real** está implementado e coberto com respostas simuladas, mas
+  depende de criar a conta para teste ponta a ponta.
 - O Lighthouse foi medido localmente; falta confirmar em produção com o PageSpeed Insights.
 
 ---
@@ -372,10 +371,16 @@ Tempo de fala de referência entre colchetes.
 3. Torne-o admin: `insert into public.admin_users (user_id) values ('<uuid do usuário>');`
 4. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 
-### EmailJS (opcional)
+### E-mail do contato (FormSubmit)
 
-1. Crie um serviço e um template com as variáveis `from_name`, `reply_to`, `subject` e `message`.
-2. Preencha `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID` e `VITE_EMAILJS_PUBLIC_KEY`.
+Sem conta nem variável de ambiente. O destino fica em `src/content/contact-inbox.ts`.
+
+1. Envie uma mensagem pelo formulário publicado.
+2. Clique em **Activate Form** no e-mail que o FormSubmit manda para a caixa de destino.
+3. (Opcional) Troque o e-mail em `contact-inbox.ts` pelo código aleatório que o FormSubmit envia
+   depois da ativação, para tirar o endereço do código publicado.
+
+Antes da ativação, as mensagens ficam só no painel.
 
 ### Checklist de entrega
 
@@ -384,5 +389,6 @@ Tempo de fala de referência entre colchetes.
 - [x] Deploy na Vercel e links preenchidos no topo deste README
 - [x] Web Analytics e Speed Insights ativos no painel da Vercel
 - [x] Repositório no GitHub com o CI verde
-- [ ] (Opcional) Supabase e EmailJS configurados
+- [ ] Formulário ativado no FormSubmit (clique no e-mail de ativação)
+- [ ] (Opcional) Supabase configurado
 - [ ] Vídeo gravado seguindo a seção 7
