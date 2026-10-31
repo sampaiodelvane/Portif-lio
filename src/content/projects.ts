@@ -125,6 +125,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     title: 'FIAP Connect',
     context: 'Rede social acadêmica',
     visibility: 'private',
+    liveUrl: 'https://fiapconnect.lovable.app/instalar',
     summary:
       'Rede social exclusiva para alunos da FIAP, com grupos de estudo e lista de tarefas para os trabalhos em equipe.',
     description:

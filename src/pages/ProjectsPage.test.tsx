@@ -144,6 +144,7 @@ describe('ProjectDetailPage', () => {
     ],
     ['gb-higienizacoes', 'https://gb-higienizacoes.vercel.app/'],
     ['escala-rede-7', 'https://escalasrede7.lovable.app/login'],
+    ['fiap-connect', 'https://fiapconnect.lovable.app/instalar'],
   ])('mostra o link publicado de /projetos/%s', async (slug, liveUrl) => {
     renderRoute(`/projetos/${slug}`)
 
