@@ -58,6 +58,8 @@ export async function githubFetch<T>(
     response = await fetch(url, { headers, signal: init.signal })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
+    // stale-if-error: sem rede, a última versão salva é melhor que uma tela de erro.
+    if (cached) return parseBody(cached.body, schema)
     throw new GithubApiError('network', 'Falha de rede ao acessar o GitHub', { cause: error })
   }
 
@@ -69,6 +71,9 @@ export async function githubFetch<T>(
     const etag = response.headers.get('etag')
     if (etag) writeCache(url, { etag, body })
   } else if (isRateLimited(response)) {
+    // O GitHub devolve 403 até para requisição condicional quando a cota acaba:
+    // se já temos os dados salvos, mostramos eles (stale-if-error) em vez do erro.
+    if (cached) return parseBody(cached.body, schema)
     throw new GithubApiError('rate-limit', 'Limite de requisições do GitHub atingido', {
       status: response.status,
       resetAt: parseResetHeader(response),
@@ -81,6 +86,10 @@ export async function githubFetch<T>(
     })
   }
 
+  return parseBody(body, schema)
+}
+
+function parseBody<T>(body: unknown, schema: ZodMiniType<T>): T {
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
     throw new GithubApiError('invalid-response', 'Resposta inesperada da API do GitHub', {

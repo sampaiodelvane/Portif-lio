@@ -89,6 +89,53 @@ describe('fetchUserRepos', () => {
   })
 })
 
+describe('stale-if-error', () => {
+  function primeCacheThen(failure: () => Response | Promise<Response>) {
+    let call = 0
+    return mockFetch([
+      {
+        match: /.*/,
+        respond: () =>
+          (call++ === 0
+            ? jsonResponse([makeRepoDto({ name: 'salvo' })], { headers: { etag: 'W/"v1"' } })
+            : failure()) as Response,
+      },
+    ])
+  }
+
+  it('com a cota esgotada, devolve os dados salvos em vez do erro', async () => {
+    primeCacheThen(() =>
+      jsonResponse({}, { status: 403, headers: { 'x-ratelimit-remaining': '0' } }),
+    )
+
+    await fetchUserRepos('octocat')
+    const second = await fetchUserRepos('octocat')
+
+    expect(second[0]?.name).toBe('salvo')
+  })
+
+  it('sem rede, devolve os dados salvos', async () => {
+    const fetchMock = primeCacheThen(() => jsonResponse([]))
+    await fetchUserRepos('octocat')
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+
+    const second = await fetchUserRepos('octocat')
+
+    expect(second[0]?.name).toBe('salvo')
+  })
+
+  it('sem nada salvo, o rate limit continua virando erro tipado', async () => {
+    mockFetch([
+      {
+        match: /.*/,
+        respond: () => jsonResponse({}, { status: 403, headers: { 'x-ratelimit-remaining': '0' } }),
+      },
+    ])
+
+    await expect(fetchUserRepos('octocat')).rejects.toMatchObject({ kind: 'rate-limit' })
+  })
+})
+
 describe('regras de exibição', () => {
   it('remove forks e arquivados e ordena pelo push mais recente', async () => {
     mockFetch([
