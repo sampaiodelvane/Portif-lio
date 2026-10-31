@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Dark mode por classe no <html>, controlado pelo ThemeContext (Fase 2). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Identidade visual: editorial e sóbria.
+ * Papel/grafite + tinta + UM acento terroso. Sem neon, glow ou gradientes.
+ */
+@theme {
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --color-paper: #f6f3ee;
+  --color-surface: #ffffff;
+  --color-ink: #1c1b19;
+  --color-muted: #6b665e;
+  --color-line: #dcd6cc;
+  --color-accent: #a4472a;
+  --color-accent-ink: #ffffff;
+}
+
+@layer base {
+  .dark {
+    --color-paper: #171614;
+    --color-surface: #201f1c;
+    --color-ink: #ece8e1;
+    --color-muted: #a39d93;
+    --color-line: #34322d;
+    --color-accent: #d98a64;
+    --color-accent-ink: #171614;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}

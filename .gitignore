@@ -1,0 +1,30 @@
+# Dependências e build
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# Variáveis de ambiente — NUNCA versionar. Só o .env.example vai para o repo.
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code — configs locais da máquina
+.claude/settings.local.json
+.claude/launch.json
