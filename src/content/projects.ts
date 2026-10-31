@@ -138,6 +138,43 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     ],
     stack: ['TypeScript'],
   },
+  {
+    slug: 'gestao-vendas-monitoramento',
+    repoName: 'wmsistemascftv',
+    title: 'Gestão de Vendas e Serviços - Empresa de Monitoramento',
+    context: 'Projeto real para cliente',
+    visibility: 'private',
+    liveUrl: 'https://wmsistemascftv.lovable.app',
+    demoUrl: 'https://sampaiodelvane.github.io/wmsistemas-cftv-demo/',
+    summary:
+      'Gestão de clientes, orçamentos, serviços e finanças para uma empresa de segurança eletrônica, com orçamento montado por voz com IA.',
+    description:
+      'Aplicação instalável (PWA) que cobre o ciclo comercial de uma empresa de monitoramento e CFTV: do cadastro do cliente ao orçamento aceito por link, da ordem de serviço ao pagamento e ao recibo enviado pelo WhatsApp. Relatórios por prestador mostram funil de vendas, custos, margens e lucro. A demonstração pública roda isolada, com dados fictícios e sem conexão com o banco de produção.',
+    features: [
+      'Painel com funil de vendas e agenda do dia, filtráveis por prestador',
+      'Orçamentos com itens do catálogo, desconto e mão de obra em percentual ou valor fixo',
+      'Envio do orçamento em PDF, WhatsApp ou e-mail, com link de aceite que aprova automaticamente',
+      'Orçamento montado por voz com IA, que identifica o cliente e os itens do catálogo',
+      'Fases do orçamento (rascunho, enviado, aprovado, convertido) e reabertura de vencidos',
+      'Conversão em ordem de serviço com agendamento e acompanhamento da execução',
+      'Pagamentos em dinheiro, PIX, cartão (até 12x) ou boleto, com barra de progresso',
+      'Recibo em PDF enviado direto para o WhatsApp do cliente',
+      'Catálogo com reajuste de preços em lote e balanço de custos e margens',
+      'Controle de despesas e relatórios de receita, conversão e lucro por prestador',
+      'Perfis de administrador e prestador, com exclusão protegida por senha',
+      'Instalável na tela inicial (PWA) e demonstração pública com dados fictícios',
+    ],
+    stack: [
+      'React',
+      'TypeScript',
+      'Vite',
+      'Tailwind CSS',
+      'shadcn/ui',
+      'TanStack Query',
+      'jsPDF',
+      'PWA',
+    ],
+  },
 ]
 
 export function findProjectBySlug(slug: string): PortfolioProject | undefined {

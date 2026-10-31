@@ -163,6 +163,26 @@ describe('ProjectDetailPage', () => {
     expect(screen.getByText(/Código-fonte privado/)).toBeInTheDocument()
   })
 
+  it('com demonstração e sistema publicado, a demonstração vem primeiro', async () => {
+    renderRoute('/projetos/gestao-vendas-monitoramento')
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Gestão de Vendas e Serviços - Empresa de Monitoramento',
+      }),
+    ).toBeVisible()
+    const external = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('target') === '_blank')
+    expect(external.map((link) => link.getAttribute('href'))).toEqual([
+      'https://sampaiodelvane.github.io/wmsistemas-cftv-demo/',
+      'https://wmsistemascftv.lovable.app/',
+    ])
+    expect(external[0]).toHaveTextContent('Ver demonstração')
+    expect(external[1]).toHaveTextContent('Acessar o sistema')
+  })
+
   it('slug inexistente mostra "projeto não encontrado"', async () => {
     renderRoute('/projetos/fantasma')
 
