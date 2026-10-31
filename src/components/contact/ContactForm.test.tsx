@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { CONTACT_INBOX } from '@/content/contact-inbox'
 import { DEMO_KEYS, readStored } from '@/test/demo-backend'
 import { jsonResponse, mockFetch } from '@/test/github-fixtures'
 import { renderRoute } from '@/test/render-route'
@@ -82,12 +83,9 @@ describe('ContactForm — envio', () => {
   })
 
   it('mostra "Enviando…" com o botão desabilitado enquanto aguarda', async () => {
-    vi.stubEnv('VITE_EMAILJS_SERVICE_ID', 's')
-    vi.stubEnv('VITE_EMAILJS_TEMPLATE_ID', 't')
-    vi.stubEnv('VITE_EMAILJS_PUBLIC_KEY', 'k')
     let release: (r: Response) => void = () => {}
     mockFetch([
-      { match: /emailjs/, respond: () => new Promise<Response>((r) => (release = r)) as never },
+      { match: /formsubmit/, respond: () => new Promise<Response>((r) => (release = r)) as never },
     ])
     const user = await openForm()
     await fillValid(user)
@@ -96,15 +94,14 @@ describe('ContactForm — envio', () => {
 
     const button = await screen.findByRole('button', { name: /enviando/i })
     expect(button).toBeDisabled()
-    release(new Response('OK'))
+    release(jsonResponse({ success: 'true' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Mensagem enviada')
   })
 
-  it('envia pelo EmailJS e grava cópia para o painel em paralelo', async () => {
-    vi.stubEnv('VITE_EMAILJS_SERVICE_ID', 'service_x')
-    vi.stubEnv('VITE_EMAILJS_TEMPLATE_ID', 'template_y')
-    vi.stubEnv('VITE_EMAILJS_PUBLIC_KEY', 'public_z')
-    const fetchMock = mockFetch([{ match: /emailjs/, respond: () => new Response('OK') }])
+  it('envia pelo FormSubmit para a caixa do autor e grava cópia no painel', async () => {
+    const fetchMock = mockFetch([
+      { match: /formsubmit/, respond: () => jsonResponse({ success: 'true' }) },
+    ])
     const user = await openForm()
     await fillValid(user)
 
@@ -112,19 +109,33 @@ describe('ContactForm — envio', () => {
 
     await screen.findByRole('status')
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toContain('api.emailjs.com')
+    expect(url).toBe(`https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_INBOX)}`)
     expect(JSON.parse(String(init.body))).toMatchObject({
-      service_id: 'service_x',
-      template_params: { reply_to: 'ana@exemplo.com' },
+      name: 'Ana Souza',
+      email: 'ana@exemplo.com',
+      _subject: '[Portfólio] Vaga front-end',
     })
     expect(storedMessages()).toHaveLength(1)
   })
 
+  it('formulário ainda não ativado no FormSubmit: guarda no painel e mostra sucesso', async () => {
+    mockFetch([
+      {
+        match: /formsubmit/,
+        respond: () => jsonResponse({ success: 'false', message: 'This form needs Activation' }),
+      },
+    ])
+    const user = await openForm()
+    await fillValid(user)
+
+    await user.click(submitButton())
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Mensagem enviada')
+    expect(storedMessages()).toHaveLength(1)
+  })
+
   it('se todos os canais falham, mostra erro e mantém o que foi digitado', async () => {
-    vi.stubEnv('VITE_EMAILJS_SERVICE_ID', 's')
-    vi.stubEnv('VITE_EMAILJS_TEMPLATE_ID', 't')
-    vi.stubEnv('VITE_EMAILJS_PUBLIC_KEY', 'k')
-    mockFetch([{ match: /emailjs/, respond: () => jsonResponse({}, { status: 500 }) }])
+    mockFetch([{ match: /formsubmit/, respond: () => jsonResponse({}, { status: 500 }) }])
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota')
     })

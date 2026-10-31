@@ -1,4 +1,4 @@
-import { getEmailJsConfig } from '@/lib/env'
+import { CONTACT_INBOX } from '@/content/contact-inbox'
 import { getPublicBackend } from '@/services/backend'
 import { sendContactEmail } from '@/services/email-service'
 import type { ContactInput } from '@/types/contact'
@@ -11,13 +11,11 @@ export interface SubmitResult {
 /**
  * Envia o e-mail e grava a cópia para o painel EM PARALELO.
  * Sucesso se pelo menos um canal funcionou: a mensagem não se perde
- * se o EmailJS estiver fora do ar (fica no painel) ou vice-versa.
+ * se o FormSubmit estiver fora do ar (fica no painel) ou vice-versa.
  */
 export async function submitContact(input: ContactInput): Promise<SubmitResult> {
-  const emailConfig = getEmailJsConfig()
-
   const [email, storage] = await Promise.allSettled([
-    emailConfig ? sendContactEmail(emailConfig, input) : Promise.reject(new Error('sem EmailJS')),
+    sendContactEmail(CONTACT_INBOX, input),
     getPublicBackend().createMessage(input),
   ])
 
