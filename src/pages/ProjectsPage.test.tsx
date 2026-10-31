@@ -143,6 +143,7 @@ describe('ProjectDetailPage', () => {
       'https://sampaiodelvane.github.io/Landing-Page---Tema-Livre-CHP-Front-End-Design-/',
     ],
     ['gb-higienizacoes', 'https://gb-higienizacoes.vercel.app/'],
+    ['escala-rede-7', 'https://escalasrede7.lovable.app/login'],
   ])('mostra o link publicado de /projetos/%s', async (slug, liveUrl) => {
     renderRoute(`/projetos/${slug}`)
 

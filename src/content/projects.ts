@@ -80,6 +80,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     title: 'Escala Rede 7',
     context: 'Sistema corporativo',
     visibility: 'private',
+    liveUrl: 'https://escalasrede7.lovable.app/login',
     summary:
       'Sistema para montar, validar, fechar e exportar as escalas de trabalho dos postos da Rede 7, com regras trabalhistas automáticas.',
     description:
