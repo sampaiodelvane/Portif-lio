@@ -22,8 +22,7 @@ verificações automáticas em hooks de git e CI, e métricas medidas antes de c
 4. [Decisões de engenharia e trade-offs](#4-decisões-de-engenharia-e-trade-offs)
 5. [Qualidade: testes, lint e CI](#5-qualidade-testes-lint-e-ci)
 6. [Harness de IA](#6-harness-de-ia)
-7. [Roteiro do vídeo (8 min)](#7-roteiro-do-vídeo-8-min)
-8. [Deploy e configuração de serviços](#8-deploy-e-configuração-de-serviços)
+7. [Deploy e configuração de serviços](#7-deploy-e-configuração-de-serviços)
 
 ---
 
@@ -299,62 +298,7 @@ automático**, porque uma instrução em texto pode ser esquecida, mas um hook n
 
 ---
 
-## 7. Roteiro do vídeo (8 min)
-
-Grave com o site aberto (Vercel ou `npm run preview`), o editor com o repositório e um terminal.
-Tempo de fala de referência entre colchetes.
-
-### Abertura — 0:00 a 0:20
-
-> "Este é o meu portfólio do CP3. Vou mostrar a stack e a arquitetura, justificar as decisões
-> com os trade-offs e explicar como conduzi a IA com um harness versionado."
-
-**Tela:** home do site.
-
-### Bloco 1 — Stack e arquitetura · 0:20 a 2:50 (~2,5 min)
-
-| Tempo | Tela                                         | Fala (resumo)                                                                                                    |
-| ----- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 0:20  | Home → Projetos → busca "react" → detalhe    | Tour: vitrine curada (públicos e privados), filtros na URL, detalhe em `/projetos/adega-bordo`.                  |
-| 0:50  | Alternar tema; recarregar                    | Tema persistido e aplicado antes da pintura, sem flash.                                                          |
-| 1:05  | Contato: enviar vazio, depois preencher      | Validação acessível com RHF + Zod; botão bloqueia durante o envio.                                               |
-| 1:25  | `/admin` → redireciona → login demo → painel | Rota protegida, volta à URL pedida; marcar como lida; escolher destaque e ver na home.                           |
-| 1:55  | Editor: árvore `src/`                        | Camadas: pages → components/hooks → services → types. Componente nunca chama `fetch`.                            |
-| 2:20  | Diagrama de fluxo no README                  | Hook → TanStack Query → service com Zod → GitHub / backend. Backend é Supabase ou modo demo, escolhido pelo env. |
-
-### Bloco 2 — Justificativas e trade-offs · 2:50 a 5:20 (~2,5 min)
-
-| Tempo | Tela                             | Fala (resumo)                                                                                                         |
-| ----- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 2:50  | Tabela de trade-offs (README §4) | Vite em vez de Next: não preciso de SSR. TanStack Query em vez de `useEffect`: cache e estados prontos.               |
-| 3:20  | `github-client.ts`               | Cota de 60 req/h sem token: cache em memória, ETag (304 não gasta cota), `initialData` e stale-if-error.              |
-| 3:55  | `supabase/migrations/…sql`       | Segurança no RLS: anônimo só insere mensagem; admin via `admin_users`. Por isso não fiz "JWT criptografado" no front. |
-| 4:25  | `docs/performance.md`            | Medi antes de otimizar: LCP da home 2,51 s → 1,24 s ao tirar a home do lazy; CLS 0,108 → 0; `zod/mini` −70%.          |
-| 4:55  | Terminal: `npm run perf:bundle`  | Trade-off consciente: +3,6 kB no bundle inicial para eliminar uma ida e volta antes do LCP.                           |
-
-### Bloco 3 — Harness de IA e condução · 5:20 a 7:50 (~2,5 min)
-
-| Tempo | Tela                                                           | Fala (resumo)                                                                                                       |
-| ----- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 5:20  | `CLAUDE.md`                                                    | Regras de camadas, nomes, commits, branches e identidade visual "sem neon de IA", lidas pelo agente em toda sessão. |
-| 5:50  | Tabela "Regra → quem garante" (README §6)                      | Princípio: toda regra importante tem verificador automático.                                                        |
-| 6:15  | Terminal: `git commit --allow-empty -m "teste"` sendo recusado | O commitlint barra mensagem fora do padrão.                                                                         |
-| 6:35  | Terminal: `git add -f .env.local` + commit recusado            | A guarda de `.env` funciona mesmo forçando.                                                                         |
-| 6:55  | `git log --oneline`                                            | Histórico em Conventional Commits; commits `docs(harness)` mostram o `CLAUDE.md` evoluindo por fase.                |
-| 7:15  | Tabela "Onde o harness pegou erros"                            | Exemplos reais: violação de camadas, bug pego por teste, medição contaminada pelo antivírus.                        |
-| 7:35  | GitHub Actions verde                                           | CI repete tudo no servidor: a `main` só recebe código verde.                                                        |
-
-### Fechamento — 7:50 a 8:00
-
-> "Resumindo: stack enxuta e justificada, desempenho medido e um harness que transforma regras
-> em verificações automáticas. Obrigado!"
-
-> **Depois do passo 6:35:** tire o `.env.local` do stage com `git reset .env.local` — o hook
-> já terá impedido o commit. Os dois comandos foram testados e não criam commit.
-
----
-
-## 8. Deploy e configuração de serviços
+## 7. Deploy e configuração de serviços
 
 ### Vercel
 
@@ -391,4 +335,3 @@ Antes da ativação, as mensagens ficam só no painel.
 - [x] Repositório no GitHub com o CI verde
 - [x] Formulário ativado no FormSubmit e testado em produção (e-mail recebido)
 - [ ] (Opcional) Supabase configurado
-- [ ] Vídeo gravado seguindo a seção 7
